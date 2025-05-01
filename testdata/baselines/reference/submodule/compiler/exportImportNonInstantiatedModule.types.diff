@@ -9,9 +9,3 @@
      
  }
  
- var x: B.A1.I = { x: 1 };
-->x : A.I
-+>x : I
- >B : any
- >A1 : any
- >{ x: 1 } : { x: number; }

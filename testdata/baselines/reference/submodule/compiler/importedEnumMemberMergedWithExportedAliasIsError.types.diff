@@ -5,5 +5,5 @@
  
  export type EnumA = [string] | [string, number];
 ->EnumA : import("alias").EnumA
-+>EnumA : EnumA
++>EnumA : import("./alias").EnumA
  

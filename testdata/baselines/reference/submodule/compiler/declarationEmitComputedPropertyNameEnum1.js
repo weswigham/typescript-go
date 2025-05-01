@@ -28,3 +28,19 @@ var Enum;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.foo = void 0;
 exports.foo = { ...{} };
+
+
+//// [type.d.ts]
+export declare enum Enum {
+    A = "a",
+    B = "b"
+}
+export type Type = {
+    x?: {};
+};
+//// [index.d.ts]
+export declare const foo: {
+    x?: {
+        a: 0;
+    } | undefined;
+};

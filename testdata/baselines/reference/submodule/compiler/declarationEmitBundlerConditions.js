@@ -39,3 +39,9 @@ export function makeC() {
 //// [index.js]
 import { makeC } from "./makeC";
 export const c = makeC();
+
+
+//// [makeC.d.ts]
+export declare function makeC(): any;
+//// [index.d.ts]
+export declare const c: any;

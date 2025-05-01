@@ -66,3 +66,26 @@ exports.obj4 = {
     /** my awesome setter */
     set x(a) { },
 };
+
+
+//// [declarationEmitObjectLiteralAccessors1.d.ts]
+// same type accessors
+export declare const obj1: {
+    /** my awesome getter (first in source order) */
+    x: string;
+};
+// divergent accessors
+export declare const obj2: {
+    /** my awesome getter */
+    get x(): string;
+    /** my awesome setter */
+    set x(a: number);
+};
+export declare const obj3: {
+    /** my awesome getter */
+    readonly x: string;
+};
+export declare const obj4: {
+    /** my awesome setter */
+    x: number;
+};

@@ -9,17 +9,9 @@
  
  /** this is multi module 3 comment*/
  export module multiM {
-@@= skipped -17, +17 lines =@@
-     }
- }
- new multiM.d();
-->new multiM.d() : multiM.d
-->multiM.d : typeof multiM.d
-+>new multiM.d() : d
-+>multiM.d : typeof d
+@@= skipped -22, +22 lines =@@
  >multiM : typeof multiM
-->d : typeof multiM.d
-+>d : typeof d
+ >d : typeof multiM.d
  
 -=== commentsMultiModuleMultiFile_0.ts ===
 -/** this is multi declare module*/

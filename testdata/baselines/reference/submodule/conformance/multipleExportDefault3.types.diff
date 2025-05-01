@@ -5,6 +5,6 @@
  
  export default class C { }
 ->C : import("multipleExportDefault3").default
-+>C : default
++>C : import("./multipleExportDefault3").default
  
  

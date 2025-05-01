@@ -31,14 +31,10 @@
 -    }
 -    return C;
 -}(X));
--
--
--//// [declFileForFunctionTypeAsTypeParameter.d.ts]
--declare class X<T> {
 +class X {
- }
--declare class C extends X<() => number> {
++}
 +class C extends X {
- }
--interface I extends X<() => number> {
--}
++}
+ 
+ 
+ //// [declFileForFunctionTypeAsTypeParameter.d.ts]

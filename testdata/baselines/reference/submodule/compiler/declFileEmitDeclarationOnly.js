@@ -28,3 +28,14 @@ class HelloWorld {
         Log.info(`Hello ${this.name}`);
     }
 }
+
+
+//// [helloworld.d.ts]
+declare const Log: {
+    info(msg: string): void;
+};
+declare class HelloWorld {
+    private name;
+    constructor(name: string);
+    hello(): void;
+}

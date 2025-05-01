@@ -24,3 +24,19 @@ var Foo;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.foo = void 0;
 exports.foo = { ...{} };
+
+
+//// [type.d.ts]
+declare namespace Foo {
+    const sym: unique symbol;
+}
+export type Type = {
+    x?: {};
+};
+export {};
+//// [index.d.ts]
+export declare const foo: {
+    x?: {
+        [Foo.sym]: 0;
+    } | undefined;
+};

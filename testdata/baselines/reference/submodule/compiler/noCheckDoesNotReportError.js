@@ -9,3 +9,7 @@ export const a: number = "not ok";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.a = void 0;
 exports.a = "not ok";
+
+
+//// [noCheckDoesNotReportError.d.ts]
+export declare const a: number;

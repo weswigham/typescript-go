@@ -33,12 +33,14 @@
 -    }(C));
 -    return C;
 -}());
--
--
--//// [classExpressionInClassStaticDeclarations.d.ts]
--declare class C {
--    static D: {
--        new (): {};
++}
+ 
+ 
+ //// [classExpressionInClassStaticDeclarations.d.ts]
+ declare class C {
+     static D: {
+         new (): {};
 -        D: /*elided*/ any;
--    };
++        D: any;
+     };
  }

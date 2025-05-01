@@ -9,16 +9,3 @@
  >children : {} | undefined
  }
  
-@@= skipped -35, +35 lines =@@
- >Component : Component<T, {}>
- 
- <MyComponent children={({ x }) => {}}/>
--><MyComponent children={({ x }) => {}}/> : JSX.Element
-+><MyComponent children={({ x }) => {}}/> : Element
- >MyComponent : typeof MyComponent
-->children : ({ x }: { x: number; }) => void
-->({ x }) => {} : ({ x }: { x: number; }) => void
-+>children : (__0: { x: number; }) => void
-+>({ x }) => {} : (__0: { x: number; }) => void
- >x : number
- 

@@ -56,3 +56,56 @@ exports.C = C;
 exports.default = null;
 // allows `undefined` on the input side, thanks to the initializer
 function fnWithPartialAnnotationOnDefaultparam(x = null, b) { }
+
+
+//// [declarationEmitCastReusesTypeNode3.d.ts]
+type P = {} & {
+    name: string;
+};
+export declare let vLet: {
+    name: string;
+};
+export declare const vConst: {
+    name: string;
+};
+export declare function fn(p?: {
+    name: string;
+}): void;
+export declare function fnWithRequiredDefaultParam(p: {
+    name: string;
+}, req: number): void;
+export declare class C {
+    ctorField: {
+        name: string;
+    } | undefined;
+    field: {
+        name: string;
+    };
+    optField?: {
+        name: string;
+    } | undefined;
+    readonly roFiled: {
+        name: string;
+    };
+    method(p?: {
+        name: string;
+    }): void;
+    methodWithRequiredDefault(p: {
+        name: string;
+    }, req: number): void;
+    constructor(ctorField?: {
+        name: string;
+    } | undefined);
+    get x(): {
+        name: string;
+    };
+    set x(v: {
+        name: string;
+    });
+}
+declare const _default: {
+    name: string;
+};
+export default _default;
+// allows `undefined` on the input side, thanks to the initializer
+export declare function fnWithPartialAnnotationOnDefaultparam(x: P, b: number): void;

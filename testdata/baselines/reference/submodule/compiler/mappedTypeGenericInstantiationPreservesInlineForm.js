@@ -22,3 +22,11 @@ const test1 = (schema) => { };
 exports.test1 = test1;
 function test2(schema) { }
 ;
+
+
+//// [mappedTypeGenericInstantiationPreservesInlineForm.d.ts]
+// repro from #53109
+export declare const test1: <T = Record<string, never>>(schema: { [K in keyof Required<T>]: T[K]; }) => void;
+export declare function test2<T = Record<string, never>>(schema: {
+    [K in keyof Required<T>]: T[K];
+}): void;

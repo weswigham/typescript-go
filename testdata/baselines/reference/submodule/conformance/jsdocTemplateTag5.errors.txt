@@ -1,7 +1,7 @@
 a.js(9,5): error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
 a.js(14,16): error TS2304: Cannot find name 'K'.
 a.js(15,18): error TS2304: Cannot find name 'V'.
-a.js(18,21): error TS2339: Property '_map' does not exist on type '{ get: (key: K) => V; }'.
+a.js(18,21): error TS2339: Property '_map' does not exist on type '{ get(key: K): V; }'.
 a.js(30,5): error TS2683: 'this' implicitly has type 'any' because it does not have a type annotation.
 a.js(35,16): error TS2304: Cannot find name 'K'.
 a.js(36,18): error TS2304: Cannot find name 'V'.
@@ -38,7 +38,7 @@ a.js(58,18): error TS2304: Cannot find name 'V'.
         get(key) {
             return this._map[key + ''];
                         ~~~~
-!!! error TS2339: Property '_map' does not exist on type '{ get: (key: K) => V; }'.
+!!! error TS2339: Property '_map' does not exist on type '{ get(key: K): V; }'.
         }
     }
     

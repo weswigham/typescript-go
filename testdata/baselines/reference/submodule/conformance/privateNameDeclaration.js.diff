@@ -19,12 +19,6 @@
      }
  }
 -_A_foo = new WeakMap(), _A_bar = new WeakMap();
--
--
--//// [privateNameDeclaration.d.ts]
--declare class A {
--    #private;
--    baz: string;
--    qux: number;
--    quux(): void;
--}
+ 
+ 
+ //// [privateNameDeclaration.d.ts]

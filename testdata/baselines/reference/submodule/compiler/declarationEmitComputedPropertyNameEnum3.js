@@ -32,3 +32,21 @@ var Foo;
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.foo = void 0;
 exports.foo = { ...{} };
+
+
+//// [type.d.ts]
+export declare namespace Foo {
+    enum Enum {
+        A = "a",
+        B = "b"
+    }
+}
+export type Type = {
+    x?: {
+        [Foo.Enum]: 0;
+    };
+};
+//// [index.d.ts]
+export declare const foo: {
+    x?: {} | undefined;
+};

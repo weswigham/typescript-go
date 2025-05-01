@@ -41,24 +41,13 @@
 -    };
 -    return publicClassWithWithPrivateTypeParameters;
 -}());
--exports.publicClassWithWithPrivateTypeParameters = publicClassWithWithPrivateTypeParameters;
--
--
--//// [staticMethodWithTypeParameterExtendsClauseDeclFile.d.ts]
--export declare class publicClass {
 +    myPrivateMethod2() {
 +    }
 +    static myPublicStaticMethod() {
 +    }
 +    myPublicMethod() {
 +    }
- }
--export declare class publicClassWithWithPrivateTypeParameters {
--    private static myPrivateStaticMethod1;
--    private myPrivateMethod1;
--    private static myPrivateStaticMethod2;
--    private myPrivateMethod2;
--    static myPublicStaticMethod<T extends publicClass>(): void;
--    myPublicMethod<T extends publicClass>(): void;
--}
-+exports.publicClassWithWithPrivateTypeParameters = publicClassWithWithPrivateTypeParameters;
++}
+ exports.publicClassWithWithPrivateTypeParameters = publicClassWithWithPrivateTypeParameters;
+ 
+ 

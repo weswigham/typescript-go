@@ -50,12 +50,22 @@
 -    __extends(D, _super);
 -    function D() {
 -        return _super.call(this) || this;
--    }
++}
++class AB {
++}
++class AD extends AB {
++}
++class AND {
++}
++class ADD extends AD {
++    f() {
+     }
 -    return D;
 -}(B));
 -var AB = /** @class */ (function () {
 -    function AB() {
--    }
++    b() {
+     }
 -    return AB;
 -}());
 -var AD = /** @class */ (function (_super) {
@@ -81,50 +91,7 @@
 -    };
 -    return ADD;
 -}(AD));
--
--
--//// [override5.d.ts]
--declare class B {
--    p1: number;
--    p2: number;
--    p3: number;
--    p4: number;
--    oop: number;
--    pp: number;
--    op: number;
- }
--declare class D extends B {
--    p1: number;
--    p2: number;
--    readonly p3: number;
--    readonly p4: number;
--    static sp: number;
--    oop: number;
--    pp: number;
--    op: number;
--    constructor();
-+class AB {
- }
--declare abstract class AB {
--    abstract f(): void;
--    abstract b(): void;
-+class AD extends AB {
- }
--declare abstract class AD extends AB {
--    abstract f(): void;
--    abstract b(): void;
-+class AND {
- }
--declare abstract class AND {
--    abstract f(): void;
--    abstract b(): void;
-+class ADD extends AD {
-+    f() {
-+    }
-+    b() {
-+    }
- }
--declare class ADD extends AD {
--    f(): void;
--    b(): void;
--}
++}
+ 
+ 
+ //// [override5.d.ts]

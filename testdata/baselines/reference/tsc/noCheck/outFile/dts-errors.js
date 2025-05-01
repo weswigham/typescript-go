@@ -13,13 +13,25 @@ export const b = 10;
 	}
 }
 
-ExitStatus:: 0
+ExitStatus:: 2
 
 CompilerOptions::{
     "noCheck": true,
     "outFile": "/home/src/workspaces/project/built"
 }
 Output::
+a.ts(1,14): error TS4094: Property 'p' of exported anonymous class type may not be private or protected.
+
+
+Found 1 error in a.ts[90m:1[0m
+
+//// [/home/src/workspaces/project/a.d.ts] new file
+export declare const a: {
+    new (): {
+        p: number;
+    };
+};
+
 //// [/home/src/workspaces/project/a.js] new file
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
@@ -30,6 +42,9 @@ const a = class {
 exports.a = a;
 
 //// [/home/src/workspaces/project/a.ts] no change
+//// [/home/src/workspaces/project/b.d.ts] new file
+export declare const b = 10;
+
 //// [/home/src/workspaces/project/b.js] new file
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });

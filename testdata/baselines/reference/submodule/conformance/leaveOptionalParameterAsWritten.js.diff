@@ -4,26 +4,30 @@
  type Foo = teams.calling.Foo;
  export const bar = (p?: Foo) => {}
  
--
--
--//// [a.d.ts]
--export interface Foo {
--}
--//// [b.d.ts]
--import * as a from "./a";
--declare global {
--    namespace teams {
--        namespace calling {
--            export import Foo = a.Foo;
--        }
--    }
--}
--//// [c.d.ts]
--type Foo = teams.calling.Foo;
--export declare const bar: (p?: Foo) => void;
 +//// [a.js]
- export {};
++export {};
 +//// [b.js]
 +export {};
 +//// [c.js]
 +export const bar = (p) => { };
+ 
+ 
+ //// [a.d.ts]
+@@= skipped -7, +13 lines =@@
+ }
+ //// [b.d.ts]
+ import * as a from "./a";
+-declare global {
++declare namespace global {
+     namespace teams {
+         namespace calling {
+             export import Foo = a.Foo;
+         }
+     }
+ }
+-//// [c.d.ts]
+-type Foo = teams.calling.Foo;
+-export declare const bar: (p?: Foo) => void;
+ export {};
++//// [c.d.ts]
++export declare const bar: (p?: import("./a").Foo | undefined) => void;

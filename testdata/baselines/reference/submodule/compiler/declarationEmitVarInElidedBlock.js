@@ -13,3 +13,7 @@ exports.b = void 0;
 {
     var a = "";
 }
+
+
+//// [declarationEmitVarInElidedBlock.d.ts]
+export declare let b: typeof a;

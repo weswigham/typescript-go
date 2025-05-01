@@ -77,18 +77,11 @@
 -    };
 -    return D;
 -}());
--
--
--//// [classConstructorAccessibility4.d.ts]
--declare class A {
--    private constructor();
--    method(): void;
 +        }
 +        class F extends D {
 +        }
 +    }
- }
--declare class D {
--    protected constructor();
--    method(): void;
--}
++}
+ 
+ 
+ //// [classConstructorAccessibility4.d.ts]

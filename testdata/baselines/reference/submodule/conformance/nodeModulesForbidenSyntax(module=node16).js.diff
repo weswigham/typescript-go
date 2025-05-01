@@ -14,45 +14,54 @@
  //// [index.cjs]
  "use strict";
  Object.defineProperty(exports, "__esModule", { value: true });
-@@= skipped -47, +44 lines =@@
- // esm format file
- const x = () => (void 0);
+@@= skipped -50, +47 lines =@@
+ 
+ 
+ //// [index.d.ts]
++// cjs format file
+ declare const x: <T>() => T;
  export { x };
--
--
--//// [index.d.ts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.cts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.mts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.ts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.cts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.mts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.ts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.mts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.cts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.mts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.cts]
--declare const x: <T>() => T;
--export { x };
--//// [index.d.ts]
--declare const x: <T>() => T;
--export { x };
+ //// [index.d.cts]
++// cjs format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.mts]
++// esm format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.ts]
++// cjs format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.cts]
++// cjs format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.mts]
++// esm format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.ts]
++// esm format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.mts]
++// esm format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.cts]
++// cjs format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.mts]
++// esm format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.cts]
++// cjs format file
+ declare const x: <T>() => T;
+ export { x };
+ //// [index.d.ts]
++// esm format file
+ declare const x: <T>() => T;
+ export { x };

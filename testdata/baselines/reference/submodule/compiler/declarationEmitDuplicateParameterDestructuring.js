@@ -14,3 +14,14 @@ const fn1 = ({ prop: a, prop: b }) => a + b;
 exports.fn1 = fn1;
 const fn2 = ({ prop: a }, { prop: b }) => a + b;
 exports.fn2 = fn2;
+
+
+//// [declarationEmitDuplicateParameterDestructuring.d.ts]
+export declare const fn1: ({ prop: a, prop: b }: {
+    prop: number;
+}) => number;
+export declare const fn2: ({ prop: a }: {
+    prop: number;
+}, { prop: b }: {
+    prop: number;
+}) => number;

@@ -4,19 +4,10 @@
  }
  
  
--
--
--//// [helloworld.d.ts]
--declare const Log: {
--    info(msg: string): void;
 +//// [helloworld.js]
 +const Log = {
 +    info(msg) { }
- };
--declare class HelloWorld {
--    private name;
--    constructor(name: string);
--    hello(): void;
++};
 +class HelloWorld {
 +    name;
 +    constructor(name) {
@@ -25,4 +16,7 @@
 +    hello() {
 +        Log.info(`Hello ${this.name}`);
 +    }
- }
++}
+ 
+ 
+ //// [helloworld.d.ts]

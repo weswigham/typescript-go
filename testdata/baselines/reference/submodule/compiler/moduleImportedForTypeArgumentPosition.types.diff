@@ -9,11 +9,7 @@
  
  class C1<T>{ }
  >C1 : C1<T>
- 
- class Test1 extends C1<M2.M2C> {
- >Test1 : Test1
-->C1 : C1<M2.M2C>
-+>C1 : C1<M2C>
+@@= skipped -11, +11 lines =@@
  >M2 : any
  }
  

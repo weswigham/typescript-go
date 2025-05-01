@@ -116,7 +116,7 @@
 ->{    color: "red"} : { color: "red"; }
 +>module.exports = {    color: "red"} : { color: string; }
 +>module.exports : { color: string; }
-+>module : { export=: { color: string; }; }
++>module : { "export=": { color: string; }; }
 +>exports : { color: string; }
 +>{    color: "red"} : { color: string; }
  
@@ -138,6 +138,6 @@
 +>{ props: module.exports } : { props: { color: string; }; }
 +>props : { color: string; }
 +>module.exports : { color: string; }
-+>module : { export=: { color: string; }; }
++>module : { "export=": { color: string; }; }
 +>exports : { color: string; }
  

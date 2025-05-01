@@ -5,7 +5,7 @@
  
      "Weekend days"
 ->"Weekend days" : (typeof e5)["Weekend days"]
-+>"Weekend days" : e5."Weekend days"
++>"Weekend days" : typeof e5["Weekend days"]
  }
  
  

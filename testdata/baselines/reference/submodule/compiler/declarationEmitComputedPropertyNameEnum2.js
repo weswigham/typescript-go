@@ -17,3 +17,17 @@ Object.defineProperty(exports, "__esModule", { value: true });
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.foo = void 0;
 exports.foo = { ...{} };
+
+
+//// [type.d.ts]
+export type Type = {
+    x?: {
+        [Enum.A]: 0;
+    };
+};
+//// [index.d.ts]
+export declare const foo: {
+    x?: {
+        [x: number]: 0;
+    } | undefined;
+};

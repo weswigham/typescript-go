@@ -5,7 +5,7 @@
  
  export declare class foo {}
 ->foo : import("exportInterfaceClassAndValue").foo
-+>foo : foo
++>foo : import("./exportInterfaceClassAndValue").foo
  
  export interface foo {}
  

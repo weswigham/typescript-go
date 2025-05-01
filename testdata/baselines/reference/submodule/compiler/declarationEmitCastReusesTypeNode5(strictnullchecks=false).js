@@ -50,3 +50,30 @@ class C {
     reuseType9 = null;
 }
 exports.C = C;
+
+
+//// [declarationEmitCastReusesTypeNode5.d.ts]
+export declare const vNumberLiteral: 1;
+export declare const vStringLiteral: "1";
+export declare const vLiteral: "1";
+type R = {
+    foo: string;
+};
+export declare class C {
+    // under !strictNullChecks all types can be reused from the assertion
+    // under strictNullChecks we need to add undefined, and we can't always know we can
+    // Can't know if references contain undefined, fall back to inference
+    tsResolve?: R;
+    tsResolve2?: string | R;
+    // Simple type. we can add undefined
+    reuseType?: string | ((p: R) => void);
+    reuseType2?: string | (new (p: R) => R);
+    reuseType3?: any;
+    reuseType4?: [R, R, R];
+    reuseType5?: R[];
+    reuseType6?: "2" | 1 | 1n;
+    reuseType7?: "A";
+    reuseType8?: `${string}-ok`;
+    reuseType9?: this;
+}
+export {};

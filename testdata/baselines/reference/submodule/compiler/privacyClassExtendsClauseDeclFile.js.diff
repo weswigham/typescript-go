@@ -279,7 +279,8 @@
 -        };
 -        return publicClassInPublicModule;
 -    }());
--    publicModuleInGlobal.publicClassInPublicModule = publicClassInPublicModule;
++    }
+     publicModuleInGlobal.publicClassInPublicModule = publicClassInPublicModule;
 -    var privateClassInPublicModule = /** @class */ (function () {
 -        function privateClassInPublicModule() {
 -        }
@@ -306,7 +307,15 @@
 -        }
 -        return publicClassExtendingPublicClassInModule;
 -    }(publicClassInPublicModule));
--    publicModuleInGlobal.publicClassExtendingPublicClassInModule = publicClassExtendingPublicClassInModule;
++    class privateClassInPublicModule {
++    }
++    class privateClassExtendingPublicClassInModule extends publicClassInPublicModule {
++    }
++    class privateClassExtendingPrivateClassInModule extends privateClassInPublicModule {
++    }
++    class publicClassExtendingPublicClassInModule extends publicClassInPublicModule {
++    }
+     publicModuleInGlobal.publicClassExtendingPublicClassInModule = publicClassExtendingPublicClassInModule;
 -    var publicClassExtendingPrivateClassInModule = /** @class */ (function (_super) {
 -        __extends(publicClassExtendingPrivateClassInModule, _super);
 -        function publicClassExtendingPrivateClassInModule() {
@@ -314,11 +323,13 @@
 -        }
 -        return publicClassExtendingPrivateClassInModule;
 -    }(privateClassInPublicModule));
--    publicModuleInGlobal.publicClassExtendingPrivateClassInModule = publicClassExtendingPrivateClassInModule;
--})(publicModuleInGlobal || (publicModuleInGlobal = {}));
++    class publicClassExtendingPrivateClassInModule extends privateClassInPublicModule {
++    }
+     publicModuleInGlobal.publicClassExtendingPrivateClassInModule = publicClassExtendingPrivateClassInModule;
+ })(publicModuleInGlobal || (publicModuleInGlobal = {}));
 -var publicClassInGlobal = /** @class */ (function () {
 -    function publicClassInGlobal() {
-     }
+-    }
 -    return publicClassInGlobal;
 -}());
 -var publicClassExtendingPublicClassInGlobal = /** @class */ (function (_super) {
@@ -328,73 +339,10 @@
 -    }
 -    return publicClassExtendingPublicClassInGlobal;
 -}(publicClassInGlobal));
--
--
--//// [privacyClassExtendsClauseDeclFile_externalModule.d.ts]
--export declare namespace publicModule {
--    export class publicClassInPublicModule {
--        private f1;
--    }
-+    publicModuleInGlobal.publicClassInPublicModule = publicClassInPublicModule;
-     class privateClassInPublicModule {
-     }
--    export class publicClassExtendingPublicClassInModule extends publicClassInPublicModule {
-+    class privateClassExtendingPublicClassInModule extends publicClassInPublicModule {
-     }
--    export class publicClassExtendingPrivateClassInModule extends privateClassInPublicModule {
-+    class privateClassExtendingPrivateClassInModule extends privateClassInPublicModule {
-     }
--    export class publicClassExtendingFromPrivateModuleClass extends privateModule.publicClassInPrivateModule {
-+    class publicClassExtendingPublicClassInModule extends publicClassInPublicModule {
-     }
--    export {};
--}
--declare namespace privateModule {
--    export class publicClassInPrivateModule {
--        private f1;
-+    publicModuleInGlobal.publicClassExtendingPublicClassInModule = publicClassExtendingPublicClassInModule;
-+    class publicClassExtendingPrivateClassInModule extends privateClassInPublicModule {
-     }
--    class privateClassInPrivateModule {
--    }
--    export class publicClassExtendingPublicClassInModule extends publicClassInPrivateModule {
--    }
--    export class publicClassExtendingPrivateClassInModule extends privateClassInPrivateModule {
--    }
--    export class publicClassExtendingFromPrivateModuleClass extends privateModule.publicClassInPrivateModule {
--    }
--    export {};
-+    publicModuleInGlobal.publicClassExtendingPrivateClassInModule = publicClassExtendingPrivateClassInModule;
-+})(publicModuleInGlobal || (publicModuleInGlobal = {}));
 +class publicClassInGlobal {
- }
--export declare class publicClass {
--    private f1;
++}
 +class publicClassExtendingPublicClassInGlobal extends publicClassInGlobal {
- }
--declare class privateClass {
--}
--export declare class publicClassExtendingPublicClass extends publicClass {
--}
--export declare class publicClassExtendingPrivateClass extends privateClass {
--}
--export declare class publicClassExtendingFromPrivateModuleClass extends privateModule.publicClassInPrivateModule {
--}
--export {};
--//// [privacyClassExtendsClauseDeclFile_GlobalFile.d.ts]
--declare namespace publicModuleInGlobal {
--    export class publicClassInPublicModule {
--        private f1;
--    }
--    class privateClassInPublicModule {
--    }
--    export class publicClassExtendingPublicClassInModule extends publicClassInPublicModule {
--    }
--    export class publicClassExtendingPrivateClassInModule extends privateClassInPublicModule {
--    }
--    export {};
--}
--declare class publicClassInGlobal {
--}
--declare class publicClassExtendingPublicClassInGlobal extends publicClassInGlobal {
--}
++}
+ 
+ 
+ //// [privacyClassExtendsClauseDeclFile_externalModule.d.ts]
