@@ -310,7 +310,7 @@ func (c *Checker) isEnumTypeRelatedTo(source *ast.Symbol, target *ast.Symbol, er
 				// If we have 2 enums with *known* values that differ, they are incompatible.
 				if sourceValue != nil && targetValue != nil {
 					if errorReporter != nil {
-						errorReporter(diagnostics.Each_declaration_of_0_1_differs_in_its_value_where_2_was_expected_but_3_was_given, c.symbolToString(targetSymbol), c.symbolToString(targetProperty), c.valueToString(targetValue), c.valueToString(sourceValue))
+						errorReporter(diagnostics.Each_declaration_of_0_1_differs_in_its_value_where_2_was_expected_but_3_was_given, c.symbolToString(targetSymbol), c.symbolToString(targetProperty), valueToString(targetValue), valueToString(sourceValue))
 					}
 					c.enumRelation[key] = RelationComparisonResultFailed
 					return false
@@ -326,7 +326,7 @@ func (c *Checker) isEnumTypeRelatedTo(source *ast.Symbol, target *ast.Symbol, er
 				if sourceIsString || targetIsString {
 					if errorReporter != nil {
 						knownStringValue := core.OrElse(sourceValue, targetValue)
-						errorReporter(diagnostics.One_value_of_0_1_is_the_string_2_and_the_other_is_assumed_to_be_an_unknown_numeric_value, c.symbolToString(targetSymbol), c.symbolToString(targetProperty), c.valueToString(knownStringValue))
+						errorReporter(diagnostics.One_value_of_0_1_is_the_string_2_and_the_other_is_assumed_to_be_an_unknown_numeric_value, c.symbolToString(targetSymbol), c.symbolToString(targetProperty), valueToString(knownStringValue))
 					}
 					c.enumRelation[key] = RelationComparisonResultFailed
 					return false
@@ -1340,7 +1340,7 @@ func (c *Checker) getVariancesWorker(symbol *ast.Symbol, typeParameters []*Type)
 		links.variances = []VarianceFlags{}
 		variances := make([]VarianceFlags, len(typeParameters))
 		for i, tp := range typeParameters {
-			modifiers := c.getTypeParameterModifiers(tp)
+			modifiers := getTypeParameterModifiers(tp)
 			var variance VarianceFlags
 			switch {
 			case modifiers&ast.ModifierFlagsOut != 0:
@@ -1407,7 +1407,7 @@ func (c *Checker) isMarkerType(t *Type) bool {
 	return c.markerTypes.Has(t)
 }
 
-func (c *Checker) getTypeParameterModifiers(tp *Type) ast.ModifierFlags {
+func getTypeParameterModifiers(tp *Type) ast.ModifierFlags {
 	var flags ast.ModifierFlags
 	if tp.symbol != nil {
 		for _, d := range tp.symbol.Declarations {
@@ -3323,7 +3323,7 @@ func (r *Relater) structuredTypeRelatedToWorker(source *Type, target *Type, repo
 			return TernaryUnknown
 		}
 		params := r.c.typeAliasLinks.Get(source.alias.symbol).typeParameters
-		minParams := r.c.getMinTypeArgumentCount(params)
+		minParams := getMinTypeArgumentCount(params)
 		sourceTypes := r.c.fillMissingTypeArguments(source.alias.typeArguments, params, minParams)
 		targetTypes := r.c.fillMissingTypeArguments(target.alias.typeArguments, params, minParams)
 		varianceResult, ok := relateVariances(sourceTypes, targetTypes, variances, intersectionState)

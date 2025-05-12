@@ -2402,7 +2402,7 @@ func (c *Checker) checkTypeParameter(node *ast.Node) {
 func (c *Checker) checkTypeParameterDeferred(node *ast.Node) {
 	if ast.IsInterfaceDeclaration(node.Parent) || ast.IsClassLike(node.Parent) || ast.IsTypeOrJSTypeAliasDeclaration(node.Parent) {
 		typeParameter := c.getDeclaredTypeOfTypeParameter(c.getSymbolOfDeclaration(node))
-		modifiers := c.getTypeParameterModifiers(typeParameter) & (ast.ModifierFlagsIn | ast.ModifierFlagsOut)
+		modifiers := getTypeParameterModifiers(typeParameter) & (ast.ModifierFlagsIn | ast.ModifierFlagsOut)
 		if modifiers != 0 {
 			symbol := c.getSymbolOfDeclaration(node.Parent)
 			if ast.IsTypeOrJSTypeAliasDeclaration(node.Parent) && c.getDeclaredTypeOfSymbol(symbol).objectFlags&(ObjectFlagsAnonymous|ObjectFlagsMapped) == 0 {
@@ -4117,7 +4117,7 @@ func (c *Checker) getClassOrInterfaceDeclarationsOfSymbol(symbol *ast.Symbol) []
 
 func (c *Checker) areTypeParametersIdentical(declarations []*ast.Node, targetParameters []*Type, getTypeParameterDeclarations func(node *ast.Node) []*ast.Node) bool {
 	maxTypeArgumentCount := len(targetParameters)
-	minTypeArgumentCount := c.getMinTypeArgumentCount(targetParameters)
+	minTypeArgumentCount := getMinTypeArgumentCount(targetParameters)
 	for _, declaration := range declarations {
 		// If this declaration has too few or too many type parameters, we report an error
 		sourceParameters := getTypeParameterDeclarations(declaration)
@@ -8783,13 +8783,13 @@ func (c *Checker) hasCorrectTypeArgumentArity(signature *Signature, typeArgument
 	// If the user supplied type arguments, but the number of type arguments does not match
 	// the declared number of type parameters, the call has an incorrect arity.
 	numTypeParameters := len(signature.typeParameters)
-	minTypeArgumentCount := c.getMinTypeArgumentCount(signature.typeParameters)
+	minTypeArgumentCount := getMinTypeArgumentCount(signature.typeParameters)
 	return len(typeArguments) == 0 || len(typeArguments) >= minTypeArgumentCount && len(typeArguments) <= numTypeParameters
 }
 
 func (c *Checker) checkTypeArguments(signature *Signature, typeArgumentNodes []*ast.Node, reportErrors bool, headMessage *diagnostics.Message) []*Type {
 	typeParameters := signature.typeParameters
-	typeArgumentTypes := c.fillMissingTypeArguments(core.Map(typeArgumentNodes, c.getTypeFromTypeNode), typeParameters, c.getMinTypeArgumentCount(typeParameters))
+	typeArgumentTypes := c.fillMissingTypeArguments(core.Map(typeArgumentNodes, c.getTypeFromTypeNode), typeParameters, getMinTypeArgumentCount(typeParameters))
 	var mapper *TypeMapper
 	for i := range typeArgumentNodes {
 		// Debug.assert(typeParameters[i] != nil, "Should not call checkTypeArguments with too many type arguments")
@@ -9408,7 +9408,7 @@ func (c *Checker) getTypeArgumentArityError(node *ast.Node, signatures []*Signat
 	if len(signatures) == 1 {
 		// No overloads exist
 		sig := signatures[0]
-		minCount := c.getMinTypeArgumentCount(sig.typeParameters)
+		minCount := getMinTypeArgumentCount(sig.typeParameters)
 		maxCount := len(sig.typeParameters)
 		expected := strconv.Itoa(minCount)
 		if minCount < maxCount {
@@ -9420,7 +9420,7 @@ func (c *Checker) getTypeArgumentArityError(node *ast.Node, signatures []*Signat
 		belowArgCount := math.MinInt
 		aboveArgCount := math.MaxInt
 		for _, sig := range signatures {
-			minCount := c.getMinTypeArgumentCount(sig.typeParameters)
+			minCount := getMinTypeArgumentCount(sig.typeParameters)
 			maxCount := len(sig.typeParameters)
 			if minCount > argCount {
 				aboveArgCount = min(aboveArgCount, minCount)
@@ -17701,12 +17701,12 @@ func (c *Checker) getInstantiatedConstructorsForTypeArguments(t *Type, typeArgum
 func (c *Checker) getConstructorsForTypeArguments(t *Type, typeArgumentNodes []*ast.Node, location *ast.Node) []*Signature {
 	typeArgCount := len(typeArgumentNodes)
 	return core.Filter(c.getSignaturesOfType(t, SignatureKindConstruct), func(sig *Signature) bool {
-		return typeArgCount >= c.getMinTypeArgumentCount(sig.typeParameters) && typeArgCount <= len(sig.typeParameters)
+		return typeArgCount >= getMinTypeArgumentCount(sig.typeParameters) && typeArgCount <= len(sig.typeParameters)
 	})
 }
 
 func (c *Checker) getSignatureInstantiation(sig *Signature, typeArguments []*Type, inferredTypeParameters []*Type) *Signature {
-	instantiatedSignature := c.getSignatureInstantiationWithoutFillingInTypeArguments(sig, c.fillMissingTypeArguments(typeArguments, sig.typeParameters, c.getMinTypeArgumentCount(sig.typeParameters)))
+	instantiatedSignature := c.getSignatureInstantiationWithoutFillingInTypeArguments(sig, c.fillMissingTypeArguments(typeArguments, sig.typeParameters, getMinTypeArgumentCount(sig.typeParameters)))
 	if len(inferredTypeParameters) != 0 {
 		returnSignature := c.getSingleCallOrConstructSignature(c.getReturnTypeOfSignature(instantiatedSignature))
 		if returnSignature != nil {
@@ -19233,7 +19233,7 @@ func (c *Checker) getDefaultConstructSignatures(classType *Type) []*Signature {
 	typeArgCount := len(typeArguments)
 	var result []*Signature
 	for _, baseSig := range baseSignatures {
-		minTypeArgumentCount := c.getMinTypeArgumentCount(baseSig.typeParameters)
+		minTypeArgumentCount := getMinTypeArgumentCount(baseSig.typeParameters)
 		typeParamCount := len(baseSig.typeParameters)
 		if typeArgCount >= minTypeArgumentCount && typeArgCount <= typeParamCount {
 			var sig *Signature
@@ -20332,24 +20332,18 @@ func (c *Checker) getTypeArguments(t *Type) []*Type {
 }
 
 func (c *Checker) getEffectiveTypeArguments(node *ast.Node, typeParameters []*Type) []*Type {
-	return c.fillMissingTypeArguments(core.Map(node.TypeArguments(), c.getTypeFromTypeNode), typeParameters, c.getMinTypeArgumentCount(typeParameters))
+	return c.fillMissingTypeArguments(core.Map(node.TypeArguments(), c.getTypeFromTypeNode), typeParameters, getMinTypeArgumentCount(typeParameters))
 }
 
 // Gets the minimum number of type arguments needed to satisfy all non-optional type parameters.
-func (c *Checker) getMinTypeArgumentCount(typeParameters []*Type) int {
+func getMinTypeArgumentCount(typeParameters []*Type) int {
 	minTypeArgumentCount := 0
 	for i, typeParameter := range typeParameters {
-		if !c.hasTypeParameterDefault(typeParameter) {
+		if !hasTypeParameterDefault(typeParameter) {
 			minTypeArgumentCount = i + 1
 		}
 	}
 	return minTypeArgumentCount
-}
-
-func (c *Checker) hasTypeParameterDefault(t *Type) bool {
-	return t.symbol != nil && core.Some(t.symbol.Declarations, func(d *ast.Node) bool {
-		return ast.IsTypeParameterDeclaration(d) && d.AsTypeParameter().DefaultType != nil
-	})
 }
 
 func (c *Checker) fillMissingTypeArguments(typeArguments []*Type, typeParameters []*Type, minTypeArgumentCount int) []*Type {
@@ -21428,7 +21422,7 @@ func (c *Checker) getTypeFromClassOrInterfaceReference(node *ast.Node, symbol *a
 	typeParameters := d.LocalTypeParameters()
 	if len(typeParameters) != 0 {
 		numTypeArguments := len(node.TypeArguments())
-		minTypeArgumentCount := c.getMinTypeArgumentCount(typeParameters)
+		minTypeArgumentCount := getMinTypeArgumentCount(typeParameters)
 		if numTypeArguments < minTypeArgumentCount || numTypeArguments > len(typeParameters) {
 			message := diagnostics.Generic_type_0_requires_1_type_argument_s
 			if minTypeArgumentCount < len(typeParameters) {
@@ -21825,7 +21819,7 @@ func (c *Checker) getTypeFromTypeAliasReference(node *ast.Node, symbol *ast.Symb
 	typeParameters := c.typeAliasLinks.Get(symbol).typeParameters
 	if len(typeParameters) != 0 {
 		numTypeArguments := len(typeArguments)
-		minTypeArgumentCount := c.getMinTypeArgumentCount(typeParameters)
+		minTypeArgumentCount := getMinTypeArgumentCount(typeParameters)
 		if numTypeArguments < minTypeArgumentCount || numTypeArguments > len(typeParameters) {
 			message := core.IfElse(minTypeArgumentCount == len(typeParameters),
 				diagnostics.Generic_type_0_requires_1_type_argument_s,
@@ -21886,7 +21880,7 @@ func (c *Checker) getTypeAliasInstantiation(symbol *ast.Symbol, typeArguments []
 	key := getTypeAliasInstantiationKey(typeArguments, alias)
 	instantiation := links.instantiations[key]
 	if instantiation == nil {
-		mapper := newTypeMapper(typeParameters, c.fillMissingTypeArguments(typeArguments, typeParameters, c.getMinTypeArgumentCount(typeParameters)))
+		mapper := newTypeMapper(typeParameters, c.fillMissingTypeArguments(typeArguments, typeParameters, getMinTypeArgumentCount(typeParameters)))
 		instantiation = c.instantiateTypeWithAlias(t, mapper, alias)
 		links.instantiations[key] = instantiation
 	}

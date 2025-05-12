@@ -343,7 +343,7 @@ func (c *Checker) typePredicateToStringEx(typePredicate *TypePredicate, enclosin
 	return writer.String()
 }
 
-func (c *Checker) valueToString(value any) string {
+func valueToString(value any) string {
 	switch value := value.(type) {
 	case string:
 		return "\"" + printer.EscapeString(value, '"') + "\""
@@ -425,7 +425,7 @@ func (c *Checker) SourceFileWithTypes(sourceFile *ast.SourceFile) string {
 			c.typeToStringEx(t, nil, TypeFormatFlagsNone, writer)
 			if isDeclaration && t.flags&TypeFlagsEnumLiteral != 0 && t.flags&(TypeFlagsStringLiteral|TypeFlagsNumberLiteral) != 0 {
 				writer.Write(" = ")
-				writer.Write(c.valueToString(t.AsLiteralType().value))
+				writer.Write(valueToString(t.AsLiteralType().value))
 			}
 			writer.WriteLine()
 			typesPrinted = true

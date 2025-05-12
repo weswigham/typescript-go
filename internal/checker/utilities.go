@@ -2001,14 +2001,14 @@ func allDeclarationsInSameSourceFile(symbol *ast.Symbol) bool {
 	return true
 }
 
-func containsNonMissingUndefinedType(c *Checker, t *Type) bool {
+func containsNonMissingUndefinedType(c interface{ GetMissingType() *Type }, t *Type) bool {
 	var candidate *Type
 	if t.flags&TypeFlagsUnion != 0 {
 		candidate = t.AsUnionType().types[0]
 	} else {
 		candidate = t
 	}
-	return candidate.flags&TypeFlagsUndefined != 0 && candidate != c.missingType
+	return candidate.flags&TypeFlagsUndefined != 0 && candidate != c.GetMissingType()
 }
 
 func getAnyImportSyntax(node *ast.Node) *ast.Node {

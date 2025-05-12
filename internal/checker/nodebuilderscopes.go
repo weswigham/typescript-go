@@ -166,10 +166,10 @@ func (b *NodeBuilder) enterNewScope(declaration *ast.Node, expandedParams *[]*as
 					}
 					if originalParameters != nil && originalParam != param {
 						// Can't reference parameters that come from an expansion
-						add(param.Name, b.ch.unknownSymbol)
+						add(param.Name, b.ch.GetUnknownSymbol())
 						// Can't reference the original expanded parameter either
 						if originalParam != nil {
-							add(originalParam.Name, b.ch.unknownSymbol)
+							add(originalParam.Name, b.ch.GetUnknownSymbol())
 						}
 					} else if !core.Some(param.Declarations, func(d *ast.Node) bool {
 						var bindElement *(func(e *ast.BindingElement))
@@ -194,7 +194,7 @@ func (b *NodeBuilder) enterNewScope(declaration *ast.Node, expandedParams *[]*as
 								(*bindPattern)(e.Name().AsBindingPattern())
 								return
 							}
-							symbol := b.ch.getSymbolOfDeclaration(e.AsNode())
+							symbol := b.ch.GetSymbolOfDeclaration(e.AsNode())
 							if symbol != nil { // omitted expressions are now parsed as nameless binding patterns and also have no symbol
 								add(symbol.Name, symbol)
 							}

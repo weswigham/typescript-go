@@ -871,7 +871,7 @@ func (c *Checker) getJsxPropsTypeFromClassType(sig *Signature, context *ast.Node
 		var libraryManagedAttributeType *Type
 		if typeParams != nil {
 			// apply JSX.IntrinsicClassElements<hostClassType, ...>
-			inferredArgs := c.fillMissingTypeArguments([]*Type{hostClassType}, typeParams, c.getMinTypeArgumentCount(typeParams))
+			inferredArgs := c.fillMissingTypeArguments([]*Type{hostClassType}, typeParams, getMinTypeArgumentCount(typeParams))
 			libraryManagedAttributeType = c.instantiateType(intrinsicClassAttribs, newTypeMapper(typeParams, inferredArgs))
 		} else {
 			libraryManagedAttributeType = intrinsicClassAttribs

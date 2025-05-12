@@ -760,3 +760,63 @@ func (c *Checker) isSymbolAccessibleWorker(symbol *ast.Symbol, enclosingDeclarat
 		Accessibility: printer.SymbolAccessibilityAccessible,
 	}
 }
+
+/** @param endOfChain Set to false for recursive calls; non-recursive calls should always output something. */
+func (c *Checker) getSymbolChain(symbol *ast.Symbol, meaning ast.SymbolFlags, endOfChain bool, yieldModuleSymbol bool, enclosingDeclaration *ast.Node, useOnlyExternalAliasing bool, compareSymbols func(s1 *ast.Symbol, s2 *ast.Symbol) int) []*ast.Symbol {
+	accessibleSymbolChain := c.getAccessibleSymbolChain(symbol, enclosingDeclaration, meaning, useOnlyExternalAliasing)
+	qualifierMeaning := meaning
+	if len(accessibleSymbolChain) > 0 {
+		qualifierMeaning = getQualifiedLeftMeaning(meaning)
+	}
+	if len(accessibleSymbolChain) == 0 ||
+		c.needsQualification(accessibleSymbolChain[0], enclosingDeclaration, qualifierMeaning) {
+		// Go up and add our parent.
+		root := symbol
+		if len(accessibleSymbolChain) > 0 {
+			root = accessibleSymbolChain[0]
+		}
+		parents := c.getContainersOfSymbol(root, enclosingDeclaration, meaning)
+		if len(parents) > 0 {
+			slices.SortStableFunc(parents, compareSymbols)
+			for _, parent := range parents {
+				parentChain := c.getSymbolChain(parent, getQualifiedLeftMeaning(meaning), false, yieldModuleSymbol, enclosingDeclaration, useOnlyExternalAliasing, compareSymbols)
+				if len(parentChain) > 0 {
+					if parent.Exports != nil {
+						exported, ok := parent.Exports[ast.InternalSymbolNameExportEquals]
+						if ok && c.GetSymbolIfSameReference(exported, symbol) != nil {
+							// parentChain root _is_ symbol - symbol is a module export=, so it kinda looks like it's own parent
+							// No need to lookup an alias for the symbol in itself
+							accessibleSymbolChain = parentChain
+							break
+						}
+					}
+					nextSyms := accessibleSymbolChain
+					if len(nextSyms) == 0 {
+						fallback := c.getAliasForSymbolInContainer(parent, symbol)
+						if fallback == nil {
+							fallback = symbol
+						}
+						nextSyms = append(nextSyms, fallback)
+					}
+					accessibleSymbolChain = append(parentChain, nextSyms...)
+					break
+				}
+			}
+		}
+	}
+	if len(accessibleSymbolChain) > 0 {
+		return accessibleSymbolChain
+	}
+	if
+	// If this is the last part of outputting the symbol, always output. The cases apply only to parent symbols.
+	endOfChain ||
+		// If a parent symbol is an anonymous type, don't write it.
+		(symbol.Flags&(ast.SymbolFlagsTypeLiteral|ast.SymbolFlagsObjectLiteral) == 0) {
+		// If a parent symbol is an external module, don't write it. (We prefer just `x` vs `"foo/bar".x`.)
+		if !endOfChain && !yieldModuleSymbol && !!core.Some(symbol.Declarations, hasNonGlobalAugmentationExternalModuleSymbol) {
+			return nil
+		}
+		return []*ast.Symbol{symbol}
+	}
+	return nil
+}

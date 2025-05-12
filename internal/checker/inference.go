@@ -81,7 +81,7 @@ func (c *Checker) inferFromTypes(n *InferenceState, source *Type, target *Type) 
 			// Source and target are types originating in the same generic type alias declaration.
 			// Simply infer from source type arguments to target type arguments, with defaults applied.
 			params := c.typeAliasLinks.Get(source.alias.symbol).typeParameters
-			minParams := c.getMinTypeArgumentCount(params)
+			minParams := getMinTypeArgumentCount(params)
 			sourceTypes := c.fillMissingTypeArguments(source.alias.typeArguments, params, minParams)
 			targetTypes := c.fillMissingTypeArguments(target.alias.typeArguments, params, minParams)
 			c.inferFromTypeArguments(n, sourceTypes, targetTypes, c.getAliasVariances(source.alias.symbol))

@@ -36,7 +36,7 @@ type emitResolver struct {
 }
 
 func (r *emitResolver) IsOptionalParameter(node *ast.Node) bool {
-	return r.isOptionalParameter(node)
+	return r.checker.IsOptionalParameter(node)
 }
 
 func (r *emitResolver) IsLateBound(node *ast.Node) bool {
@@ -471,91 +471,7 @@ func (r *emitResolver) IsImportRequiredByAugmentation(decl *ast.ImportDeclaratio
 
 func (r *emitResolver) RequiresAddingImplicitUndefined(declaration *ast.Node, symbol *ast.Symbol, enclosingDeclaration *ast.Node) bool {
 	// node = r.emitContext.ParseNode(node)
-	if !ast.IsParseTreeNode(declaration) {
-		return false
-	}
-	switch declaration.Kind {
-	case ast.KindPropertyDeclaration, ast.KindPropertySignature, ast.KindJSDocPropertyTag:
-		r.checkerMu.Lock()
-		defer r.checkerMu.Unlock()
-		if symbol == nil {
-			symbol = r.checker.getSymbolOfDeclaration(declaration)
-		}
-		type_ := r.checker.getTypeOfSymbol(symbol)
-		r.checker.mappedSymbolLinks.Has(symbol)
-		return !!((symbol.Flags&ast.SymbolFlagsProperty != 0) && (symbol.Flags&ast.SymbolFlagsOptional != 0) && isOptionalDeclaration(declaration) && r.checker.ReverseMappedSymbolLinks.Has(symbol) && r.checker.ReverseMappedSymbolLinks.Get(symbol).mappedType != nil && containsNonMissingUndefinedType(r.checker, type_))
-	case ast.KindParameter, ast.KindJSDocParameterTag:
-		return r.requiresAddingImplicitUndefined(declaration, enclosingDeclaration)
-	default:
-		panic("Node cannot possibly require adding undefined")
-	}
-}
-
-func (r *emitResolver) requiresAddingImplicitUndefined(parameter *ast.Node, enclosingDeclaration *ast.Node) bool {
-	return (r.isRequiredInitializedParameter(parameter, enclosingDeclaration) || r.isOptionalUninitializedParameterProperty(parameter)) && !r.declaredParameterTypeContainsUndefined(parameter)
-}
-
-func (r *emitResolver) declaredParameterTypeContainsUndefined(parameter *ast.Node) bool {
-	// typeNode := getNonlocalEffectiveTypeAnnotationNode(parameter); // !!! JSDoc Support
-	typeNode := parameter.Type()
-	if typeNode == nil {
-		return false
-	}
-	r.checkerMu.Lock()
-	defer r.checkerMu.Unlock()
-	type_ := r.checker.getTypeFromTypeNode(typeNode)
-	// allow error type here to avoid confusing errors that the annotation has to contain undefined when it does in cases like this:
-	//
-	// export function fn(x?: Unresolved | undefined): void {}
-	return r.checker.isErrorType(type_) || r.checker.containsUndefinedType(type_)
-}
-
-func (r *emitResolver) isOptionalUninitializedParameterProperty(parameter *ast.Node) bool {
-	return r.checker.strictNullChecks &&
-		r.isOptionalParameter(parameter) &&
-		( /*isJSDocParameterTag(parameter) ||*/ parameter.Initializer() != nil) && // !!! TODO: JSDoc support
-		ast.HasSyntacticModifier(parameter, ast.ModifierFlagsParameterPropertyModifier)
-}
-
-func (r *emitResolver) isRequiredInitializedParameter(parameter *ast.Node, enclosingDeclaration *ast.Node) bool {
-	if r.checker.strictNullChecks || r.isOptionalParameter(parameter) || /*isJSDocParameterTag(parameter) ||*/ parameter.Initializer() == nil { // !!! TODO: JSDoc Support
-		return false
-	}
-	if ast.HasSyntacticModifier(parameter, ast.ModifierFlagsParameterPropertyModifier) {
-		return enclosingDeclaration != nil && ast.IsFunctionLikeDeclaration(enclosingDeclaration)
-	}
-	return true
-}
-
-func (r *emitResolver) isOptionalParameter(node *ast.Node) bool {
-	// !!! TODO: JSDoc support
-	// if (hasEffectiveQuestionToken(node)) {
-	// 	return true;
-	// }
-	if ast.IsParameter(node) && node.AsParameterDeclaration().QuestionToken != nil {
-		return true
-	}
-	if !ast.IsParameter(node) {
-		return false
-	}
-	if node.Initializer() != nil {
-		signature := r.checker.getSignatureFromDeclaration(node.Parent)
-		parameterIndex := core.FindIndex(node.Parent.Parameters(), func(p *ast.ParameterDeclarationNode) bool { return p == node })
-		// Debug.assert(parameterIndex >= 0); // !!!
-		// Only consider syntactic or instantiated parameters as optional, not `void` parameters as this function is used
-		// in grammar checks and checking for `void` too early results in parameter types widening too early
-		// and causes some noImplicitAny errors to be lost.
-		return parameterIndex >= r.checker.getMinArgumentCountEx(signature, MinArgumentCountFlagsStrongArityForUntypedJS|MinArgumentCountFlagsVoidIsNonOptional)
-	}
-	iife := ast.GetImmediatelyInvokedFunctionExpression(node.Parent)
-	if iife != nil {
-		parameterIndex := core.FindIndex(node.Parent.Parameters(), func(p *ast.ParameterDeclarationNode) bool { return p == node })
-		return node.Type() == nil &&
-			node.AsParameterDeclaration().DotDotDotToken == nil &&
-			parameterIndex >= len(r.checker.getEffectiveCallArguments(iife))
-	}
-
-	return false
+	return r.checker.RequiresAddingImplicitUndefined(declaration, symbol, enclosingDeclaration)
 }
 
 func (r *emitResolver) IsLiteralConstDeclaration(node *ast.Node) bool {

@@ -8,6 +8,7 @@ import (
 
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/core"
+	"github.com/microsoft/typescript-go/internal/diagnostics"
 	"github.com/microsoft/typescript-go/internal/jsnum"
 	"github.com/microsoft/typescript-go/internal/module"
 	"github.com/microsoft/typescript-go/internal/modulespecifiers"
@@ -80,10 +81,132 @@ type NodeBuilderContext struct {
 	typeParameterSymbolList               map[ast.SymbolId]struct{}
 }
 
+type CheckerFeatures interface {
+	modulespecifiers.CheckerShape
+	// node lookups
+	GetTypeFromTypeNode(node *ast.Node) *Type
+	GetRegularTypeOfExpression(expr *ast.Node) *Type
+	TryGetResolvedSymbolOfTypeNode(existing *ast.Node) *ast.Symbol
+	GetSymbolOfDeclaration(node *ast.Node) *ast.Symbol
+	GetTypeOfExpression(node *ast.Node) *Type
+	HasLateBindableName(node *ast.Node) bool
+	GetSignatureFromDeclaration(declaration *ast.Node) *Signature
+	GetSymbolOfNode(node *ast.Node) *ast.Symbol
+
+	// global lookups
+	GetCompilerOptions() *core.CompilerOptions
+	GetMissingType() *Type
+	GetUnknownType() *Type
+	GetErrorType() *Type
+	GetAnyType() *Type
+	GetGlobalArrayType() *Type
+	GetGlobalReadonlyArrayType() *Type
+	GetGlobalIterableType() *Type
+	GetGlobalIterableIteratorType() *Type
+	GetGlobalAsyncIterableType() *Type
+	GetGlobalAsyncIterableIteratorType() *Type
+	GetIntrinsicMarkerType() *Type
+	GetMarkerSuperTypeForCheck() *Type
+	GetMarkerSubTypeForCheck() *Type
+	GetVarianceTypeParameter() *Type
+	GetGlobalTypeAliasSymbol(name string, arity int, reportErrors bool) *ast.Symbol
+	GetUnknownSymbol() *ast.Symbol
+
+	// symbol lookups
+	GetTypeOfSymbol(symbol *ast.Symbol) *Type
+	GetWriteTypeOfSymbol(symbol *ast.Symbol) *Type
+	GetNonMissingTypeOfSymbol(symbol *ast.Symbol) *Type
+	GetDeclaredTypeOfSymbol(symbol *ast.Symbol) *Type
+	TryGetNameTypeOfSymbol(symbol *ast.Symbol) *Type
+	TryGetMapperOfSymbol(symbol *ast.Symbol) *TypeMapper
+	GetExportsOfSymbol(symbol *ast.Symbol) ast.SymbolTable
+	GetMembersOfSymbol(symbol *ast.Symbol) ast.SymbolTable
+	GetTypeParametersOfClassOrInterface(symbol *ast.Symbol) []*Type
+	ResolveAlias(symbol *ast.Symbol) (*ast.Symbol, bool)
+	GetSymbolIfSameReference(s1 *ast.Symbol, s2 *ast.Symbol) *ast.Symbol
+	GetFileSymbolIfFileSymbolExportEqualsContainer(d *ast.Node, container *ast.Symbol) *ast.Symbol
+	GetSymbolChain(
+		symbol *ast.Symbol,
+		meaning ast.SymbolFlags,
+		endOfChain bool,
+		yieldModuleSymbol bool,
+		enclosingDeclaration *ast.Node,
+		useOnlyExternalAliasing bool,
+		compareSymbols func(s1 *ast.Symbol, s2 *ast.Symbol) int,
+	) []*ast.Symbol
+	ResolveName(location *ast.Node, name string, meaning ast.SymbolFlags, nameNotFoundMessage *diagnostics.Message, isUse bool, excludeGlobals bool) *ast.Symbol
+	GetTargetSymbol(s *ast.Symbol) *ast.Symbol
+	GetLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol *ast.Symbol) []*Type
+	TryGetReverseMappedSymbolPropertyType(symbol *ast.Symbol) *Type
+	TryGetReverseMappedSymbolMappedType(symbol *ast.Symbol) *Type
+	SymbolToString(s *ast.Symbol) string
+	IsReadonlySymbol(symbol *ast.Symbol) bool
+	GetBaseTypeVariableOfClass(symbol *ast.Symbol) *Type
+	IsSymbolAccessible(symbol *ast.Symbol, enclosingDeclaration *ast.Node, meaning ast.SymbolFlags, shouldComputeAliasesToMakeVisible bool) printer.SymbolAccessibilityResult
+	IsValueSymbolAccessible(symbol *ast.Symbol, enclosingDeclaration *ast.Node) bool
+	IsTypeSymbolAccessible(typeSymbol *ast.Symbol, enclosingDeclaration *ast.Node) bool
+	GetParentOfSymbol(symbol *ast.Symbol) *ast.Symbol
+
+	// type operations
+	GetReducedType(t *Type) *Type
+	GetOptionalType(t *Type, isProperty bool) *Type
+	GetTypeWithFacts(t *Type, include TypeFacts) *Type
+	GetResolvedTypeWithoutAbstractConstructSignatures(type_ *Type) *Type
+	GetDefaultFromTypeParameter(t *Type) *Type
+	GetHomomorphicTypeVariable(t *Type) *Type
+	GetModifiersTypeFromMappedType(t *Type) *Type
+	GetConstraintTypeFromMappedType(t *Type) *Type
+	GetTypeParameterFromMappedType(t *Type) *Type
+	GetTemplateTypeFromMappedType(t *Type) *Type
+	GetNameTypeFromMappedType(t *Type) *Type
+	GetConstraintOfTypeParameter(typeParameter *Type) *Type
+	RemoveMissingType(t *Type, isOptional bool) *Type
+	NewTypeParameter() *Type
+	InstantiateType(t *Type, m *TypeMapper) *Type
+	InstantiateTypePredicate(predicate *TypePredicate, mapper *TypeMapper) *TypePredicate
+	GetConstraintDeclaration(t *Type) *ast.Node
+	GetWidenedType(t *Type) *Type
+	GetWidenedLiteralType(t *Type) *Type
+	GetSignaturesOfType(t *Type, kind SignatureKind) []*Signature
+	GetPropertiesOfObjectType(t *Type) []*ast.Symbol
+	FilterType(t *Type, f func(*Type) bool) *Type
+	GetIntersectionType(types []*Type) *Type
+	IsGenericMappedType(t *Type) bool
+	ResolveStructuredTypeMembers(t *Type) *StructuredType
+	GetTrueTypeFromConditionalType(t *Type) *Type
+	GetFalseTypeFromConditionalType(t *Type) *Type
+	GetTypeArguments(t *Type) []*Type
+	GetTypeReferenceArity(t *Type) int
+	GetInferredTypeParameterConstraint(t *Type, omitTypeReferences bool) *Type
+
+	// signature operations
+	GetReturnTypeOfSignature(sig *Signature) *Type
+	GetTypePredicateOfSignature(sig *Signature) *TypePredicate
+	GetExpandedParametersEx(sig *Signature, skipUnionExpanding bool) [][]*ast.Symbol
+	GetOrCreateTypeFromSignature(sig *Signature, outerTypeParameters []*Type) *Type
+
+	// program passthru
+	GetEmitModuleFormatOfFile(sourceFile *ast.SourceFile) core.ModuleKind
+
+	// util
+	SortSymbols(symbols []*ast.Symbol)
+	CompareSymbols(s1 *ast.Symbol, s2 *ast.Symbol) int
+	IsMappedTypeWithKeyofConstraintDeclaration(t *Type) bool
+	IsErrorType(t *Type) bool
+	IsOptionalParameter(node *ast.Node) bool
+	RequiresAddingImplicitUndefined(declaration *ast.Node, symbol *ast.Symbol, enclosingDeclaration *ast.Node) bool
+	IsClassInstanceSide(t *Type) bool
+	GetTupleElementLabel(elementInfo TupleElementInfo, restSymbol *ast.Symbol, index int) string
+	IsReferenceToType(t *Type, target *Type) bool
+	IsTypeIdenticalTo(source *Type, target *Type) bool
+	FormatUnionTypes(types []*Type) []*Type
+	IsNoInferType(t *Type) bool
+}
+
 type NodeBuilder struct {
 	// host members
 	f  *ast.NodeFactory
-	ch *Checker
+	ch CheckerFeatures
 	e  *printer.EmitContext
 
 	// cache
@@ -213,10 +336,6 @@ func getAccessStack(ref *ast.Node) []*ast.Node {
 	return ids
 }
 
-func isClassInstanceSide(c *Checker, t *Type) bool {
-	return t.symbol != nil && t.symbol.Flags&ast.SymbolFlagsClass != 0 && (t == c.getDeclaredTypeOfClassOrInterface(t.symbol) || (t.flags&TypeFlagsObject != 0 && t.objectFlags&ObjectFlagsIsClassInstanceClone != 0))
-}
-
 func (b *NodeBuilder) createElidedInformationPlaceholder() *ast.TypeNode {
 	b.ctx.approximateLength += 3
 	if b.ctx.flags&nodebuilder.FlagsNoTruncation == 0 {
@@ -248,7 +367,7 @@ func (b *NodeBuilder) tryReuseExistingTypeNodeHelper(existing *ast.TypeNode) *as
 func (b *NodeBuilder) tryReuseExistingTypeNode(typeNode *ast.TypeNode, t *Type, host *ast.Node, addUndefined bool) *ast.TypeNode {
 	originalType := t
 	if addUndefined {
-		t = b.ch.getOptionalType(t, !ast.IsParameter(host))
+		t = b.ch.GetOptionalType(t, !ast.IsParameter(host))
 	}
 	clone := b.tryReuseExistingNonParameterTypeNode(typeNode, t, host, nil)
 	if clone != nil {
@@ -279,7 +398,7 @@ func (b *NodeBuilder) typeNodeIsEquivalentToType(annotatedDeclaration *ast.Node,
 	// !!!
 	// used to be hasEffectiveQuestionToken for JSDoc
 	if isOptionalDeclaration(annotatedDeclaration) {
-		return b.ch.getTypeWithFacts(t, TypeFactsNEUndefined) == typeFromTypeNode
+		return b.ch.GetTypeWithFacts(t, TypeFactsNEUndefined) == typeFromTypeNode
 	}
 	return false
 }
@@ -292,23 +411,15 @@ func (b *NodeBuilder) existingTypeNodeIsNotReferenceOrIsReferenceWithCompatibleT
 	if !ast.IsTypeReferenceNode(existing) {
 		return true
 	}
-	// `type` is a reference type, and `existing` is a type reference node, but we still need to make sure they refer to the _same_ target type
-	// before we go comparing their type argument counts.
-	b.ch.getTypeFromTypeReference(existing)
-	// call to ensure symbol is resolved
-	links := b.ch.symbolNodeLinks.TryGet(existing)
-	if links == nil {
-		return true
-	}
-	symbol := links.resolvedSymbol
+	symbol := b.ch.TryGetResolvedSymbolOfTypeNode(existing)
 	if symbol == nil {
 		return true
 	}
-	existingTarget := b.ch.getDeclaredTypeOfSymbol(symbol)
+	existingTarget := b.ch.GetDeclaredTypeOfSymbol(symbol)
 	if existingTarget == nil || existingTarget != t.AsTypeReference().target {
 		return true
 	}
-	return len(existing.TypeArguments()) >= b.ch.getMinTypeArgumentCount(t.AsTypeReference().target.AsInterfaceType().TypeParameters())
+	return len(existing.TypeArguments()) >= getMinTypeArgumentCount(t.AsTypeReference().target.AsInterfaceType().TypeParameters())
 }
 
 func (b *NodeBuilder) tryReuseExistingNonParameterTypeNode(existing *ast.TypeNode, t *Type, host *ast.Node, annotationType *Type) *ast.TypeNode {
@@ -327,26 +438,6 @@ func (b *NodeBuilder) tryReuseExistingNonParameterTypeNode(existing *ast.TypeNod
 	return nil
 }
 
-func (b *NodeBuilder) getResolvedTypeWithoutAbstractConstructSignatures(t *StructuredType) *Type {
-	if len(t.ConstructSignatures()) == 0 {
-		return t.AsType()
-	}
-	if t.objectTypeWithoutAbstractConstructSignatures != nil {
-		return t.objectTypeWithoutAbstractConstructSignatures
-	}
-	constructSignatures := core.Filter(t.ConstructSignatures(), func(signature *Signature) bool {
-		return signature.flags&SignatureFlagsAbstract == 0
-	})
-	if len(constructSignatures) == len(t.ConstructSignatures()) {
-		t.objectTypeWithoutAbstractConstructSignatures = t.AsType()
-		return t.AsType()
-	}
-	typeCopy := b.ch.newAnonymousType(t.symbol, t.members, t.CallSignatures(), core.IfElse(len(constructSignatures) > 0, constructSignatures, []*Signature{}), t.indexInfos)
-	t.objectTypeWithoutAbstractConstructSignatures = typeCopy
-	typeCopy.AsStructuredType().objectTypeWithoutAbstractConstructSignatures = typeCopy
-	return typeCopy
-}
-
 func (b *NodeBuilder) symbolToNode(symbol *ast.Symbol, meaning ast.SymbolFlags) *ast.Node {
 	if b.ctx.internalFlags&nodebuilder.InternalFlagsWriteComputedProps != 0 {
 		if symbol.ValueDeclaration != nil {
@@ -354,15 +445,13 @@ func (b *NodeBuilder) symbolToNode(symbol *ast.Symbol, meaning ast.SymbolFlags) 
 			if name != nil && ast.IsComputedPropertyName(name) {
 				return name
 			}
-			if b.ch.valueSymbolLinks.Has(symbol) {
-				nameType := b.ch.valueSymbolLinks.Get(symbol).nameType
-				if nameType != nil && nameType.flags&(TypeFlagsEnumLiteral|TypeFlagsUniqueESSymbol) != 0 {
-					oldEnclosing := b.ctx.enclosingDeclaration
-					b.ctx.enclosingDeclaration = nameType.symbol.ValueDeclaration
-					result := b.f.NewComputedPropertyName(b.symbolToExpression(nameType.symbol, meaning))
-					b.ctx.enclosingDeclaration = oldEnclosing
-					return result
-				}
+			nameType := b.ch.TryGetNameTypeOfSymbol(symbol)
+			if nameType != nil && nameType.flags&(TypeFlagsEnumLiteral|TypeFlagsUniqueESSymbol) != 0 {
+				oldEnclosing := b.ctx.enclosingDeclaration
+				b.ctx.enclosingDeclaration = nameType.symbol.ValueDeclaration
+				result := b.f.NewComputedPropertyName(b.symbolToExpression(nameType.symbol, meaning))
+				b.ctx.enclosingDeclaration = oldEnclosing
+				return result
 			}
 		}
 	}
@@ -433,9 +522,9 @@ func (b *NodeBuilder) symbolToTypeNode(symbol *ast.Symbol, mask ast.SymbolFlags,
 		targetFile := ast.GetSourceFileOfModule(chain[0])
 		var specifier string
 		var attributes *ast.Node
-		if b.ch.compilerOptions.GetModuleResolutionKind() == core.ModuleResolutionKindNode16 || b.ch.compilerOptions.GetModuleResolutionKind() == core.ModuleResolutionKindNodeNext {
+		if b.ch.GetCompilerOptions().GetModuleResolutionKind() == core.ModuleResolutionKindNode16 || b.ch.GetCompilerOptions().GetModuleResolutionKind() == core.ModuleResolutionKindNodeNext {
 			// An `import` type directed at an esm format file is only going to resolve in esm mode - set the esm mode assertion
-			if targetFile != nil && contextFile != nil && b.ch.program.GetEmitModuleFormatOfFile(targetFile) == core.ModuleKindESNext && b.ch.program.GetEmitModuleFormatOfFile(targetFile) != b.ch.program.GetEmitModuleFormatOfFile(contextFile) {
+			if targetFile != nil && contextFile != nil && b.ch.GetEmitModuleFormatOfFile(targetFile) == core.ModuleKindESNext && b.ch.GetEmitModuleFormatOfFile(targetFile) != b.ch.GetEmitModuleFormatOfFile(contextFile) {
 				specifier = b.getSpecifierForModuleSymbol(chain[0], core.ModuleKindESNext)
 				attributes = b.f.NewImportAttributes(
 					ast.KindWithKeyword,
@@ -450,10 +539,10 @@ func (b *NodeBuilder) symbolToTypeNode(symbol *ast.Symbol, mask ast.SymbolFlags,
 		if (b.ctx.flags&nodebuilder.FlagsAllowNodeModulesRelativePaths == 0) /* && b.ch.compilerOptions.GetModuleResolutionKind() != core.ModuleResolutionKindClassic */ && strings.Contains(specifier, "/node_modules/") {
 			oldSpecifier := specifier
 
-			if b.ch.compilerOptions.GetModuleResolutionKind() == core.ModuleResolutionKindNode16 || b.ch.compilerOptions.GetModuleResolutionKind() == core.ModuleResolutionKindNodeNext {
+			if b.ch.GetCompilerOptions().GetModuleResolutionKind() == core.ModuleResolutionKindNode16 || b.ch.GetCompilerOptions().GetModuleResolutionKind() == core.ModuleResolutionKindNodeNext {
 				// We might be able to write a portable import type using a mode override; try specifier generation again, but with a different mode set
 				swappedMode := core.ModuleKindESNext
-				if b.ch.program.GetEmitModuleFormatOfFile(contextFile) == core.ModuleKindESNext {
+				if b.ch.GetEmitModuleFormatOfFile(contextFile) == core.ModuleKindESNext {
 					swappedMode = core.ModuleKindCommonJS
 				}
 				specifier = b.getSpecifierForModuleSymbol(chain[0], swappedMode)
@@ -545,23 +634,23 @@ func (b *NodeBuilder) createAccessFromSymbolChain(chain []*ast.Symbol, index int
 	} else {
 		// lookup a ref to symbol within parent to handle export aliases
 		if parent != nil {
-			exports := b.ch.getExportsOfSymbol(parent)
+			exports := b.ch.GetExportsOfSymbol(parent)
 			if exports != nil {
 				// avoid exhaustive iteration in the common case
 				res, ok := exports[symbol.Name]
-				if symbol.Name != ast.InternalSymbolNameExportEquals && !isLateBoundName(symbol.Name) && ok && res != nil && b.ch.getSymbolIfSameReference(res, symbol) != nil {
+				if symbol.Name != ast.InternalSymbolNameExportEquals && !isLateBoundName(symbol.Name) && ok && res != nil && b.ch.GetSymbolIfSameReference(res, symbol) != nil {
 					symbolName = symbol.Name
 				} else {
 					results := make(map[*ast.Symbol]string, 1)
 					for name, ex := range exports {
-						if b.ch.getSymbolIfSameReference(ex, symbol) != nil && !isLateBoundName(name) && name != ast.InternalSymbolNameExportEquals {
+						if b.ch.GetSymbolIfSameReference(ex, symbol) != nil && !isLateBoundName(name) && name != ast.InternalSymbolNameExportEquals {
 							results[ex] = name
 							// break // must collect all results and sort them - exports are randomly iterated
 						}
 					}
 					resultSymbols := slices.Collect(maps.Keys(results))
 					if len(resultSymbols) > 0 {
-						b.ch.sortSymbols(resultSymbols)
+						b.ch.SortSymbols(resultSymbols)
 						symbolName = results[resultSymbols[0]]
 					}
 				}
@@ -592,8 +681,8 @@ func (b *NodeBuilder) createAccessFromSymbolChain(chain []*ast.Symbol, index int
 	b.ctx.approximateLength += len(symbolName) + 1
 
 	if (b.ctx.flags&nodebuilder.FlagsForbidIndexedAccessSymbolReferences == 0) && parent != nil &&
-		b.ch.getMembersOfSymbol(parent) != nil && b.ch.getMembersOfSymbol(parent)[symbol.Name] != nil &&
-		b.ch.getSymbolIfSameReference(b.ch.getMembersOfSymbol(parent)[symbol.Name], symbol) != nil {
+		b.ch.GetMembersOfSymbol(parent) != nil && b.ch.GetMembersOfSymbol(parent)[symbol.Name] != nil &&
+		b.ch.GetSymbolIfSameReference(b.ch.GetMembersOfSymbol(parent)[symbol.Name], symbol) != nil {
 		// Should use an indexed access
 		lhs := b.createAccessFromSymbolChain(chain, index-1, stopper, overrideTypeArguments)
 		if ast.IsIndexedAccessTypeNode(lhs) {
@@ -646,7 +735,7 @@ func (b *NodeBuilder) createExpressionFromSymbolChain(chain []*ast.Symbol, index
 		return b.f.NewStringLiteral(b.getSpecifierForModuleSymbol(symbol, core.ResolutionModeNone))
 	}
 
-	if index == 0 || canUsePropertyAccess(symbolName, b.ch.languageVersion) {
+	if index == 0 || canUsePropertyAccess(symbolName, b.ch.GetCompilerOptions().GetEmitScriptTarget()) {
 		identifier := b.f.NewIdentifier(symbolName)
 		b.e.AddEmitFlags(identifier, printer.EFNoAsciiEscaping)
 		// !!! TODO: smuggle type arguments out
@@ -729,31 +818,29 @@ func isDefaultBindingContext(location *ast.Node) bool {
 }
 
 func (b *NodeBuilder) getNameOfSymbolFromNameType(symbol *ast.Symbol) string {
-	if b.ch.valueSymbolLinks.Has(symbol) {
-		nameType := b.ch.valueSymbolLinks.Get(symbol).nameType
-		if nameType == nil {
-			return ""
+	nameType := b.ch.TryGetNameTypeOfSymbol(symbol)
+	if nameType == nil {
+		return ""
+	}
+	if nameType.flags&TypeFlagsStringOrNumberLiteral != 0 {
+		var name string
+		switch v := nameType.AsLiteralType().value.(type) {
+		case string:
+			name = v
+		case jsnum.Number:
+			name = v.String()
 		}
-		if nameType.flags&TypeFlagsStringOrNumberLiteral != 0 {
-			var name string
-			switch v := nameType.AsLiteralType().value.(type) {
-			case string:
-				name = v
-			case jsnum.Number:
-				name = v.String()
-			}
-			if !scanner.IsIdentifierText(name, b.ch.compilerOptions.GetEmitScriptTarget()) && !isNumericLiteralName(name) {
-				return b.ch.valueToString(nameType.AsLiteralType().value)
-			}
-			if isNumericLiteralName(name) && strings.HasPrefix(name, "-") {
-				return fmt.Sprintf("[%s]", name)
-			}
-			return name
+		if !scanner.IsIdentifierText(name, b.ch.GetCompilerOptions().GetEmitScriptTarget()) && !isNumericLiteralName(name) {
+			return valueToString(nameType.AsLiteralType().value)
 		}
-		if nameType.flags&TypeFlagsUniqueESSymbol != 0 {
-			text := b.getNameOfSymbolAsWritten(nameType.AsUniqueESSymbolType().symbol)
-			return fmt.Sprintf("[%s]", text)
+		if isNumericLiteralName(name) && strings.HasPrefix(name, "-") {
+			return fmt.Sprintf("[%s]", name)
 		}
+		return name
+	}
+	if nameType.flags&TypeFlagsUniqueESSymbol != 0 {
+		text := b.getNameOfSymbolAsWritten(nameType.AsUniqueESSymbolType().symbol)
+		return fmt.Sprintf("[%s]", text)
 	}
 	return ""
 }
@@ -787,7 +874,8 @@ func (b *NodeBuilder) getNameOfSymbolAsWritten(symbol *ast.Symbol) string {
 			// 	return symbol.Name
 			// }
 			if ast.IsComputedPropertyName(name) && symbol.CheckFlags&ast.CheckFlagsLate == 0 {
-				if b.ch.valueSymbolLinks.Has(symbol) && b.ch.valueSymbolLinks.Get(symbol).nameType != nil && b.ch.valueSymbolLinks.Get(symbol).nameType.flags&TypeFlagsStringOrNumberLiteral != 0 {
+				nameType := b.ch.TryGetNameTypeOfSymbol(symbol)
+				if nameType != nil && nameType.flags&TypeFlagsStringOrNumberLiteral != 0 {
 					result := b.getNameOfSymbolFromNameType(symbol)
 					if len(result) > 0 {
 						return result
@@ -819,15 +907,6 @@ func (b *NodeBuilder) getNameOfSymbolAsWritten(symbol *ast.Symbol) string {
 	return symbol.Name
 }
 
-// The full set of type parameters for a generic class or interface type consists of its outer type parameters plus
-// its locally declared type parameters.
-func (b *NodeBuilder) getTypeParametersOfClassOrInterface(symbol *ast.Symbol) []*Type {
-	result := make([]*Type, 0)
-	result = append(result, b.ch.getOuterTypeParametersOfClassOrInterface(symbol)...)
-	result = append(result, b.ch.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)...)
-	return result
-}
-
 func (b *NodeBuilder) lookupTypeParameterNodes(chain []*ast.Symbol, index int) *ast.TypeParameterList {
 	// Debug.assert(chain && 0 <= index && index < chain.length); // !!!
 	symbol := chain[index]
@@ -849,10 +928,10 @@ func (b *NodeBuilder) lookupTypeParameterNodes(chain []*ast.Symbol, index int) *
 		if nextSymbol.CheckFlags&ast.CheckFlagsInstantiated != 0 {
 			targetSymbol := parentSymbol
 			if parentSymbol.Flags&ast.SymbolFlagsAlias != 0 {
-				targetSymbol = b.ch.resolveAlias(parentSymbol)
+				targetSymbol, _ = b.ch.ResolveAlias(parentSymbol)
 			}
-			params := b.getTypeParametersOfClassOrInterface(targetSymbol)
-			targetMapper := b.ch.valueSymbolLinks.Get(nextSymbol).mapper
+			params := b.ch.GetTypeParametersOfClassOrInterface(targetSymbol)
+			targetMapper := b.ch.TryGetMapperOfSymbol(targetSymbol)
 			if targetMapper != nil {
 				params = core.Map(params, targetMapper.Map)
 			}
@@ -869,7 +948,6 @@ func (b *NodeBuilder) lookupTypeParameterNodes(chain []*ast.Symbol, index int) *
 	return nil
 }
 
-// TODO: move `lookupSymbolChain` and co to `symbolaccessibility.go` (but getSpecifierForModuleSymbol uses much context which makes that hard?)
 func (b *NodeBuilder) lookupSymbolChain(symbol *ast.Symbol, meaning ast.SymbolFlags, yieldModuleSymbol bool) []*ast.Symbol {
 	b.ctx.tracker.TrackSymbol(symbol, b.ctx.enclosingDeclaration, meaning)
 	return b.lookupSymbolChainWorker(symbol, meaning, yieldModuleSymbol)
@@ -880,7 +958,7 @@ func (b *NodeBuilder) lookupSymbolChainWorker(symbol *ast.Symbol, meaning ast.Sy
 	var chain []*ast.Symbol
 	isTypeParameter := symbol.Flags&ast.SymbolFlagsTypeParameter != 0
 	if !isTypeParameter && (b.ctx.enclosingDeclaration != nil || b.ctx.flags&nodebuilder.FlagsUseFullyQualifiedType != 0) && (b.ctx.internalFlags&nodebuilder.InternalFlagsDoNotIncludeSymbolChain == 0) {
-		res := b.getSymbolChain(symbol, meaning /*endOfChain*/, true, yieldModuleSymbol)
+		res := b.ch.GetSymbolChain(symbol, meaning /*endOfChain*/, true, yieldModuleSymbol, b.ctx.enclosingDeclaration, b.ctx.flags&nodebuilder.FlagsUseAliasDefinedOutsideCurrentScope != 0, b.sortByBestName)
 		chain = res
 		// Debug.checkDefined(chain) // !!!
 		// Debug.assert(chain && chain.length > 0); // !!!
@@ -890,81 +968,15 @@ func (b *NodeBuilder) lookupSymbolChainWorker(symbol *ast.Symbol, meaning ast.Sy
 	return chain
 }
 
-type sortedSymbolNamePair struct {
-	sym  *ast.Symbol
-	name string
-}
-
-/** @param endOfChain Set to false for recursive calls; non-recursive calls should always output something. */
-func (b *NodeBuilder) getSymbolChain(symbol *ast.Symbol, meaning ast.SymbolFlags, endOfChain bool, yieldModuleSymbol bool) []*ast.Symbol {
-	accessibleSymbolChain := b.ch.getAccessibleSymbolChain(symbol, b.ctx.enclosingDeclaration, meaning, b.ctx.flags&nodebuilder.FlagsUseOnlyExternalAliasing != 0)
-	qualifierMeaning := meaning
-	if len(accessibleSymbolChain) > 0 {
-		qualifierMeaning = getQualifiedLeftMeaning(meaning)
+func (b_ *NodeBuilder) sortByBestName(a *ast.Symbol, b *ast.Symbol) int {
+	var specifierA string
+	var specifierB string
+	if core.Some(a.Declarations, hasNonGlobalAugmentationExternalModuleSymbol) {
+		specifierA = b_.getSpecifierForModuleSymbol(a, core.ResolutionModeNone)
 	}
-	if len(accessibleSymbolChain) == 0 ||
-		b.ch.needsQualification(accessibleSymbolChain[0], b.ctx.enclosingDeclaration, qualifierMeaning) {
-		// Go up and add our parent.
-		root := symbol
-		if len(accessibleSymbolChain) > 0 {
-			root = accessibleSymbolChain[0]
-		}
-		parents := b.ch.getContainersOfSymbol(root, b.ctx.enclosingDeclaration, meaning)
-		if len(parents) > 0 {
-			parentSpecifiers := core.Map(parents, func(symbol *ast.Symbol) sortedSymbolNamePair {
-				if core.Some(symbol.Declarations, hasNonGlobalAugmentationExternalModuleSymbol) {
-					return sortedSymbolNamePair{symbol, b.getSpecifierForModuleSymbol(symbol, core.ResolutionModeNone)}
-				}
-				return sortedSymbolNamePair{symbol, ""}
-			})
-			slices.SortStableFunc(parentSpecifiers, b.sortByBestName)
-			for _, pair := range parentSpecifiers {
-				parent := pair.sym
-				parentChain := b.getSymbolChain(parent, getQualifiedLeftMeaning(meaning), false, yieldModuleSymbol)
-				if len(parentChain) > 0 {
-					if parent.Exports != nil {
-						exported, ok := parent.Exports[ast.InternalSymbolNameExportEquals]
-						if ok && b.ch.getSymbolIfSameReference(exported, symbol) != nil {
-							// parentChain root _is_ symbol - symbol is a module export=, so it kinda looks like it's own parent
-							// No need to lookup an alias for the symbol in itself
-							accessibleSymbolChain = parentChain
-							break
-						}
-					}
-					nextSyms := accessibleSymbolChain
-					if len(nextSyms) == 0 {
-						fallback := b.ch.getAliasForSymbolInContainer(parent, symbol)
-						if fallback == nil {
-							fallback = symbol
-						}
-						nextSyms = append(nextSyms, fallback)
-					}
-					accessibleSymbolChain = append(parentChain, nextSyms...)
-					break
-				}
-			}
-		}
+	if core.Some(b.Declarations, hasNonGlobalAugmentationExternalModuleSymbol) {
+		specifierA = b_.getSpecifierForModuleSymbol(b, core.ResolutionModeNone)
 	}
-	if len(accessibleSymbolChain) > 0 {
-		return accessibleSymbolChain
-	}
-	if
-	// If this is the last part of outputting the symbol, always output. The cases apply only to parent symbols.
-	endOfChain ||
-		// If a parent symbol is an anonymous type, don't write it.
-		(symbol.Flags&(ast.SymbolFlagsTypeLiteral|ast.SymbolFlagsObjectLiteral) == 0) {
-		// If a parent symbol is an external module, don't write it. (We prefer just `x` vs `"foo/bar".x`.)
-		if !endOfChain && !yieldModuleSymbol && !!core.Some(symbol.Declarations, hasNonGlobalAugmentationExternalModuleSymbol) {
-			return nil
-		}
-		return []*ast.Symbol{symbol}
-	}
-	return nil
-}
-
-func (b_ *NodeBuilder) sortByBestName(a sortedSymbolNamePair, b sortedSymbolNamePair) int {
-	specifierA := a.name
-	specifierB := b.name
 	if len(specifierA) > 0 && len(specifierB) > 0 {
 		isBRelative := tspath.PathIsRelative(specifierB)
 		if tspath.PathIsRelative(specifierA) == isBRelative {
@@ -978,7 +990,7 @@ func (b_ *NodeBuilder) sortByBestName(a sortedSymbolNamePair, b sortedSymbolName
 		// A is relative, B is non-relative: prefer B
 		return 1
 	}
-	return b_.ch.compareSymbols(a.sym, b.sym) // must sort symbols for stable ordering
+	return b_.ch.CompareSymbols(a, b) // must sort symbols for stable ordering
 }
 
 func isAmbientModuleSymbolName(s string) bool {
@@ -1070,7 +1082,7 @@ func (b *NodeBuilder) getSpecifierForModuleSymbol(symbol *ast.Symbol, overrideIm
 	file := ast.GetDeclarationOfKind(symbol, ast.KindSourceFile)
 	if file == nil {
 		equivalentSymbol := core.FirstNonNil(symbol.Declarations, func(d *ast.Node) *ast.Symbol {
-			return b.ch.getFileSymbolIfFileSymbolExportEqualsContainer(d, symbol)
+			return b.ch.GetFileSymbolIfFileSymbolExportEqualsContainer(d, symbol)
 		})
 		if equivalentSymbol != nil {
 			file = ast.GetDeclarationOfKind(equivalentSymbol, ast.KindSourceFile)
@@ -1112,13 +1124,13 @@ func (b *NodeBuilder) getSpecifierForModuleSymbol(symbol *ast.Symbol, overrideIm
 	if ok {
 		return result
 	}
-	isBundle := len(b.ch.compilerOptions.OutFile) > 0
+	isBundle := len(b.ch.GetCompilerOptions().OutFile) > 0
 	// For declaration bundles, we need to generate absolute paths relative to the common source dir for imports,
 	// just like how the declaration emitter does for the ambient module declarations - we can easily accomplish this
 	// using the `baseUrl` compiler option (which we would otherwise never use in declaration emit) and a non-relative
 	// specifier preference
 	host := b.ctx.tracker.GetModuleSpecifierGenerationHost()
-	specifierCompilerOptions := b.ch.compilerOptions
+	specifierCompilerOptions := b.ch.GetCompilerOptions()
 	specifierPref := modulespecifiers.ImportModuleSpecifierPreferenceProjectRelative
 	endingPref := modulespecifiers.ImportModuleSpecifierEndingPreferenceNone
 	if resolutionMode == core.ResolutionModeESM {
@@ -1154,13 +1166,13 @@ func (b *NodeBuilder) getSpecifierForModuleSymbol(symbol *ast.Symbol, overrideIm
 func (b *NodeBuilder) typeParameterToDeclarationWithConstraint(typeParameter *Type, constraintNode *ast.TypeNode) *ast.TypeParameterDeclarationNode {
 	restoreFlags := b.saveRestoreFlags()
 	b.ctx.flags &= ^nodebuilder.FlagsWriteTypeParametersInQualifiedName // Avoids potential infinite loop when building for a claimspace with a generic
-	modifiers := ast.CreateModifiersFromModifierFlags(b.ch.getTypeParameterModifiers(typeParameter), b.f.NewModifier)
+	modifiers := ast.CreateModifiersFromModifierFlags(getTypeParameterModifiers(typeParameter), b.f.NewModifier)
 	var modifiersList *ast.ModifierList
 	if len(modifiers) > 0 {
 		modifiersList = b.f.NewModifierList(modifiers)
 	}
 	name := b.typeParameterToName(typeParameter)
-	defaultParameter := b.ch.getDefaultFromTypeParameter(typeParameter)
+	defaultParameter := b.ch.GetDefaultFromTypeParameter(typeParameter)
 	var defaultParameterNode *ast.Node
 	if defaultParameter != nil {
 		defaultParameterNode = b.typeToTypeNodeClosure(defaultParameter)
@@ -1211,7 +1223,7 @@ func (b *NodeBuilder) setTextRange(range_ *ast.Node, location *ast.Node) *ast.No
 }
 
 func (b *NodeBuilder) typeParameterShadowsOtherTypeParameterInScope(name string, typeParameter *Type) bool {
-	result := b.ch.resolveName(b.ctx.enclosingDeclaration, name, ast.SymbolFlagsType, nil, false, false)
+	result := b.ch.ResolveName(b.ctx.enclosingDeclaration, name, ast.SymbolFlagsType, nil, false, false)
 	if result != nil && result.Flags&ast.SymbolFlagsTypeParameter != 0 {
 		return result != typeParameter.symbol
 	}
@@ -1278,7 +1290,7 @@ func (b *NodeBuilder) typeParameterToName(typeParameter *Type) *ast.Identifier {
 }
 
 func (b *NodeBuilder) isMappedTypeHomomorphic(mapped *Type) bool {
-	return b.ch.getHomomorphicTypeVariable(mapped) != nil
+	return b.ch.GetHomomorphicTypeVariable(mapped) != nil
 }
 
 func (b *NodeBuilder) isHomomorphicMappedTypeWithNonHomomorphicInstantiation(mapped *MappedType) bool {
@@ -1300,49 +1312,45 @@ func (b *NodeBuilder) createMappedTypeNodeFromType(type_ *Type) *ast.TypeNode {
 	var newTypeVariable *ast.Node
 
 	// If the mapped type isn't `keyof` constraint-declared, _but_ still has modifiers preserved, and its naive instantiation won't preserve modifiers because its constraint isn't `keyof` constrained, we have work to do
-	needsModifierPreservingWrapper := !b.ch.isMappedTypeWithKeyofConstraintDeclaration(type_) &&
-		b.ch.getModifiersTypeFromMappedType(type_).flags&TypeFlagsUnknown == 0 &&
+	needsModifierPreservingWrapper := !b.ch.IsMappedTypeWithKeyofConstraintDeclaration(type_) &&
+		b.ch.GetModifiersTypeFromMappedType(type_).flags&TypeFlagsUnknown == 0 &&
 		b.ctx.flags&nodebuilder.FlagsGenerateNamesForShadowedTypeParams != 0 &&
-		!(b.ch.getConstraintTypeFromMappedType(type_).flags&TypeFlagsTypeParameter != 0 && b.ch.getConstraintOfTypeParameter(b.ch.getConstraintTypeFromMappedType(type_)).flags&TypeFlagsIndex != 0)
+		!(b.ch.GetConstraintTypeFromMappedType(type_).flags&TypeFlagsTypeParameter != 0 && b.ch.GetConstraintOfTypeParameter(b.ch.GetConstraintTypeFromMappedType(type_)).flags&TypeFlagsIndex != 0)
 
-	cleanup := b.enterNewScope(mapped.declaration.AsNode(), nil, &[]*Type{b.ch.getTypeParameterFromMappedType(type_)}, nil, nil)
+	cleanup := b.enterNewScope(mapped.declaration.AsNode(), nil, &[]*Type{b.ch.GetTypeParameterFromMappedType(type_)}, nil, nil)
 	defer cleanup()
 
-	if b.ch.isMappedTypeWithKeyofConstraintDeclaration(type_) {
+	if b.ch.IsMappedTypeWithKeyofConstraintDeclaration(type_) {
 		// We have a { [P in keyof T]: X }
 		// We do this to ensure we retain the toplevel keyof-ness of the type which may be lost due to keyof distribution during `getConstraintTypeFromMappedType`
 		if b.ctx.flags&nodebuilder.FlagsGenerateNamesForShadowedTypeParams != 0 && b.isHomomorphicMappedTypeWithNonHomomorphicInstantiation(mapped) {
-			newParam := b.ch.newTypeParameter(
-				b.ch.newSymbol(ast.SymbolFlagsTypeParameter, "T"),
-			)
+			newParam := b.ch.NewTypeParameter()
 			name := b.typeParameterToName(newParam)
 			newTypeVariable = b.f.NewTypeReferenceNode(name.AsNode(), nil)
 		}
 		indexTarget := newTypeVariable
 		if indexTarget == nil {
-			indexTarget = b.typeToTypeNodeClosure(b.ch.getModifiersTypeFromMappedType(type_))
+			indexTarget = b.typeToTypeNodeClosure(b.ch.GetModifiersTypeFromMappedType(type_))
 		}
 		appropriateConstraintTypeNode = b.f.NewTypeOperatorNode(ast.KindKeyOfKeyword, indexTarget)
 	} else if needsModifierPreservingWrapper {
 		// So, step 1: new type variable
-		newParam := b.ch.newTypeParameter(
-			b.ch.newSymbol(ast.SymbolFlagsTypeParameter, "T"),
-		)
+		newParam := b.ch.NewTypeParameter()
 		name := b.typeParameterToName(newParam)
 		newTypeVariable = b.f.NewTypeReferenceNode(name.AsNode(), nil)
 		// step 2: make that new type variable itself the constraint node, making the mapped type `{[K in T_1]: Template}`
 		appropriateConstraintTypeNode = newTypeVariable
 	} else {
-		appropriateConstraintTypeNode = b.typeToTypeNodeClosure(b.ch.getConstraintTypeFromMappedType(type_))
+		appropriateConstraintTypeNode = b.typeToTypeNodeClosure(b.ch.GetConstraintTypeFromMappedType(type_))
 	}
 
-	typeParameterNode := b.typeParameterToDeclarationWithConstraint(b.ch.getTypeParameterFromMappedType(type_), appropriateConstraintTypeNode)
+	typeParameterNode := b.typeParameterToDeclarationWithConstraint(b.ch.GetTypeParameterFromMappedType(type_), appropriateConstraintTypeNode)
 	var nameTypeNode *ast.Node
 	if mapped.declaration.NameType != nil {
-		nameTypeNode = b.typeToTypeNodeClosure(b.ch.getNameTypeFromMappedType(type_))
+		nameTypeNode = b.typeToTypeNodeClosure(b.ch.GetNameTypeFromMappedType(type_))
 	}
-	templateTypeNode := b.typeToTypeNodeClosure(b.ch.removeMissingType(
-		b.ch.getTemplateTypeFromMappedType(type_),
+	templateTypeNode := b.typeToTypeNodeClosure(b.ch.RemoveMissingType(
+		b.ch.GetTemplateTypeFromMappedType(type_),
 		getMappedTypeModifiers(type_)&MappedTypeModifiersIncludeOptional != 0,
 	))
 	result := b.f.NewMappedTypeNode(
@@ -1362,12 +1370,12 @@ func (b *NodeBuilder) createMappedTypeNodeFromType(type_ *Type) *ast.TypeNode {
 
 		rawConstraintTypeFromDeclaration := b.getTypeFromTypeNode(mapped.declaration.TypeParameter.AsTypeParameter().Constraint.AsTypeOperatorNode().Type, false)
 		if rawConstraintTypeFromDeclaration != nil {
-			rawConstraintTypeFromDeclaration = b.ch.getConstraintOfTypeParameter(rawConstraintTypeFromDeclaration)
+			rawConstraintTypeFromDeclaration = b.ch.GetConstraintOfTypeParameter(rawConstraintTypeFromDeclaration)
 		}
 		if rawConstraintTypeFromDeclaration == nil {
-			rawConstraintTypeFromDeclaration = b.ch.unknownType
+			rawConstraintTypeFromDeclaration = b.ch.GetUnknownType()
 		}
-		originalConstraint := b.ch.instantiateType(rawConstraintTypeFromDeclaration, mapped.mapper)
+		originalConstraint := b.ch.InstantiateType(rawConstraintTypeFromDeclaration, mapped.mapper)
 
 		var originalConstraintNode *ast.Node
 		if originalConstraint.flags&TypeFlagsUnknown != 0 {
@@ -1375,7 +1383,7 @@ func (b *NodeBuilder) createMappedTypeNodeFromType(type_ *Type) *ast.TypeNode {
 		}
 
 		return b.f.NewConditionalTypeNode(
-			b.typeToTypeNodeClosure(b.ch.getModifiersTypeFromMappedType(type_)),
+			b.typeToTypeNodeClosure(b.ch.GetModifiersTypeFromMappedType(type_)),
 			b.f.NewInferTypeNode(b.f.NewTypeParameterDeclaration(nil, newTypeVariable.AsTypeReference().TypeName.Clone(b.f), originalConstraintNode, nil)),
 			result,
 			b.f.NewKeywordTypeNode(ast.KindNeverKeyword),
@@ -1386,8 +1394,8 @@ func (b *NodeBuilder) createMappedTypeNodeFromType(type_ *Type) *ast.TypeNode {
 		// constrained to a `keyof` type to preserve its modifier-preserving behavior. This is all basically because we preserve modifiers for a wider set of mapped types than
 		// just homomorphic ones.
 		return b.f.NewConditionalTypeNode(
-			b.typeToTypeNodeClosure(b.ch.getConstraintTypeFromMappedType(type_)),
-			b.f.NewInferTypeNode(b.f.NewTypeParameterDeclaration(nil, newTypeVariable.AsTypeReference().TypeName.Clone(b.f), b.f.NewTypeOperatorNode(ast.KindKeyOfKeyword, b.typeToTypeNodeClosure(b.ch.getModifiersTypeFromMappedType(type_))), nil)),
+			b.typeToTypeNodeClosure(b.ch.GetConstraintTypeFromMappedType(type_)),
+			b.f.NewInferTypeNode(b.f.NewTypeParameterDeclaration(nil, newTypeVariable.AsTypeReference().TypeName.Clone(b.f), b.f.NewTypeOperatorNode(ast.KindKeyOfKeyword, b.typeToTypeNodeClosure(b.ch.GetModifiersTypeFromMappedType(type_))), nil)),
 			result,
 			b.f.NewKeywordTypeNode(ast.KindNeverKeyword),
 		)
@@ -1433,10 +1441,10 @@ func (b *NodeBuilder) typeToTypeNodeHelperWithPossibleReusableTypeNode(type_ *Ty
 }
 
 func (b *NodeBuilder) typeParameterToDeclaration(parameter *Type) *ast.Node {
-	constraint := b.ch.getConstraintOfTypeParameter(parameter)
+	constraint := b.ch.GetConstraintOfTypeParameter(parameter)
 	var constraintNode *ast.Node
 	if constraint != nil {
-		constraintNode = b.typeToTypeNodeHelperWithPossibleReusableTypeNode(constraint, b.ch.getConstraintDeclaration(parameter))
+		constraintNode = b.typeToTypeNodeHelperWithPossibleReusableTypeNode(constraint, b.ch.GetConstraintDeclaration(parameter))
 	}
 	return b.typeParameterToDeclarationWithConstraint(parameter, constraintNode)
 }
@@ -1446,10 +1454,10 @@ func (b *NodeBuilder) symbolToTypeParameterDeclarations(symbol *ast.Symbol) []*a
 }
 
 func (b *NodeBuilder) typeParametersToTypeParameterDeclarations(symbol *ast.Symbol) []*ast.Node {
-	targetSymbol := b.ch.getTargetSymbol(symbol)
+	targetSymbol := b.ch.GetTargetSymbol(symbol)
 	if targetSymbol.Flags&(ast.SymbolFlagsClass|ast.SymbolFlagsInterface|ast.SymbolFlagsAlias) != 0 {
 		var results []*ast.Node
-		params := b.ch.getLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
+		params := b.ch.GetLocalTypeParametersOfClassOrInterfaceOrTypeAlias(symbol)
 		for _, param := range params {
 			results = append(results, b.typeParameterToDeclaration(param))
 		}
@@ -1472,7 +1480,7 @@ func getEffectiveParameterDeclaration(symbol *ast.Symbol) *ast.Node {
 func (b *NodeBuilder) symbolToParameterDeclaration(parameterSymbol *ast.Symbol, preserveModifierFlags bool) *ast.Node {
 	parameterDeclaration := getEffectiveParameterDeclaration(parameterSymbol)
 
-	parameterType := b.ch.getTypeOfSymbol(parameterSymbol)
+	parameterType := b.ch.GetTypeOfSymbol(parameterSymbol)
 	parameterTypeNode := b.serializeTypeForDeclaration(parameterDeclaration, parameterType, parameterSymbol)
 	var modifiers *ast.ModifierList
 	if b.ctx.flags&nodebuilder.FlagsOmitParameterModifiers == 0 && preserveModifierFlags && parameterDeclaration != nil && ast.CanHaveModifiers(parameterDeclaration) {
@@ -1489,7 +1497,7 @@ func (b *NodeBuilder) symbolToParameterDeclaration(parameterSymbol *ast.Symbol, 
 	}
 	name := b.parameterToParameterDeclarationName(parameterSymbol, parameterDeclaration)
 	// TODO: isOptionalParameter on emit resolver here is silly - hoist to checker and reexpose on emit resolver?
-	isOptional := parameterDeclaration != nil && b.ch.GetEmitResolver(nil, true).isOptionalParameter(parameterDeclaration) || parameterSymbol.CheckFlags&ast.CheckFlagsOptionalParameter != 0
+	isOptional := parameterDeclaration != nil && b.ch.IsOptionalParameter(parameterDeclaration) || parameterSymbol.CheckFlags&ast.CheckFlagsOptionalParameter != 0
 	var questionToken *ast.Node
 	if isOptional {
 		questionToken = b.f.NewToken(ast.KindQuestionToken)
@@ -1521,19 +1529,19 @@ func (b *NodeBuilder) symbolTableToDeclarationStatements(symbolTable *ast.Symbol
 
 func (b *NodeBuilder) serializeTypeForExpression(expr *ast.Node) *ast.Node {
 	// !!! TODO: shim, add node reuse
-	type_ := b.ch.instantiateType(b.ch.getWidenedType(b.ch.getRegularTypeOfExpression(expr)), b.ctx.mapper)
+	type_ := b.ch.InstantiateType(b.ch.GetWidenedType(b.ch.GetRegularTypeOfExpression(expr)), b.ctx.mapper)
 	return b.typeToTypeNodeClosure(type_)
 }
 
 func (b *NodeBuilder) serializeInferredReturnTypeForSignature(signature *Signature, returnType *Type) *ast.Node {
 	oldSuppressReportInferenceFallback := b.ctx.suppressReportInferenceFallback
 	b.ctx.suppressReportInferenceFallback = true
-	typePredicate := b.ch.getTypePredicateOfSignature(signature)
+	typePredicate := b.ch.GetTypePredicateOfSignature(signature)
 	var returnTypeNode *ast.Node
 	if typePredicate != nil {
 		var predicate *TypePredicate
 		if b.ctx.mapper != nil {
-			predicate = b.ch.instantiateTypePredicate(typePredicate, b.ctx.mapper)
+			predicate = b.ch.InstantiateTypePredicate(typePredicate, b.ctx.mapper)
 		} else {
 			predicate = typePredicate
 		}
@@ -1576,14 +1584,14 @@ func (b *NodeBuilder) signatureToSignatureDeclarationHelper(signature *Signature
 	var typeParameters *[]*ast.Node
 	var typeArguments *[]*ast.Node
 
-	expandedParams := b.ch.getExpandedParameters(signature, true /*skipUnionExpanding*/)[0]
+	expandedParams := b.ch.GetExpandedParametersEx(signature, true /*skipUnionExpanding*/)[0]
 	cleanup := b.enterNewScope(signature.declaration, &expandedParams, &signature.typeParameters, &signature.parameters, signature.mapper)
 	b.ctx.approximateLength += 3
 	// Usually a signature contributes a few more characters than this, but 3 is the minimum
 
 	if b.ctx.flags&nodebuilder.FlagsWriteTypeArgumentsOfSignature != 0 && signature.target != nil && signature.mapper != nil && signature.target.typeParameters != nil {
 		for _, parameter := range signature.target.typeParameters {
-			node := b.typeToTypeNodeClosure(b.ch.instantiateType(parameter, signature.mapper))
+			node := b.typeToTypeNodeClosure(b.ch.InstantiateType(parameter, signature.mapper))
 			if typeArguments == nil {
 				typeArguments = &[]*ast.Node{}
 			}
@@ -1832,7 +1840,7 @@ func (b *NodeBuilder) serializeReturnTypeForSignature(signature *Signature) *ast
 	}
 	var returnTypeNode *ast.Node
 
-	returnType := b.ch.getReturnTypeOfSignature(signature)
+	returnType := b.ch.GetReturnTypeOfSignature(signature)
 	if !(suppressAny && IsTypeAny(returnType)) {
 		// !!! IsolatedDeclaration support
 		// if signature.declaration != nil && !ast.NodeIsSynthesized(signature.declaration) {
@@ -1887,23 +1895,23 @@ func (b *NodeBuilder) indexInfoToIndexSignatureDeclarationHelper(indexInfo *Inde
 func (b *NodeBuilder) serializeTypeForDeclaration(declaration *ast.Declaration, t *Type, symbol *ast.Symbol) *ast.Node {
 	// !!! node reuse logic
 	if symbol == nil {
-		symbol = b.ch.getSymbolOfDeclaration(declaration)
+		symbol = b.ch.GetSymbolOfDeclaration(declaration)
 	}
 	if t == nil {
 		t = b.ctx.enclosingSymbolTypes[ast.GetSymbolId(symbol)]
 		if t == nil {
 			if symbol.Flags&ast.SymbolFlagsAccessor != 0 && declaration.Kind == ast.KindSetAccessor {
-				t = b.ch.instantiateType(b.ch.getWriteTypeOfSymbol(symbol), b.ctx.mapper)
+				t = b.ch.InstantiateType(b.ch.GetWriteTypeOfSymbol(symbol), b.ctx.mapper)
 			} else if symbol != nil && (symbol.Flags&(ast.SymbolFlagsTypeLiteral|ast.SymbolFlagsSignature) == 0) {
-				t = b.ch.instantiateType(b.ch.getWidenedLiteralType(b.ch.getTypeOfSymbol(symbol)), b.ctx.mapper)
+				t = b.ch.InstantiateType(b.ch.GetWidenedLiteralType(b.ch.GetTypeOfSymbol(symbol)), b.ctx.mapper)
 			} else {
-				t = b.ch.errorType
+				t = b.ch.GetErrorType()
 			}
 		}
 		// !!! TODO: JSDoc, getEmitResolver call is unfortunate layering for the helper - hoist it into checker
-		addUndefinedForParameter := declaration != nil && (ast.IsParameter(declaration) /*|| ast.IsJSDocParameterTag(declaration)*/) && b.ch.GetEmitResolver(nil, true).RequiresAddingImplicitUndefined(declaration, symbol, b.ctx.enclosingDeclaration)
+		addUndefinedForParameter := declaration != nil && (ast.IsParameter(declaration) /*|| ast.IsJSDocParameterTag(declaration)*/) && b.ch.RequiresAddingImplicitUndefined(declaration, symbol, b.ctx.enclosingDeclaration)
 		if addUndefinedForParameter {
-			t = b.ch.getOptionalType(t, false)
+			t = b.ch.GetOptionalType(t, false)
 		}
 	}
 
@@ -1943,12 +1951,9 @@ func (b *NodeBuilder) shouldUsePlaceholderForProperty(propertySymbol *ast.Symbol
 	// (2)
 	if len(b.ctx.reverseMappedStack) > 0 {
 		last := b.ctx.reverseMappedStack[len(b.ctx.reverseMappedStack)-1]
-		if b.ch.ReverseMappedSymbolLinks.Has(last) {
-			links := b.ch.ReverseMappedSymbolLinks.TryGet(last)
-			propertyType := links.propertyType
-			if propertyType != nil && propertyType.objectFlags&ObjectFlagsAnonymous == 0 {
-				return true
-			}
+		propertyType := b.ch.TryGetReverseMappedSymbolPropertyType(last)
+		if propertyType != nil && propertyType.objectFlags&ObjectFlagsAnonymous == 0 {
+			return true
 		}
 	}
 	// (3) - we only inspect the last MAX_REVERSE_MAPPED_NESTING_INSPECTION_DEPTH elements of the
@@ -1957,11 +1962,7 @@ func (b *NodeBuilder) shouldUsePlaceholderForProperty(propertySymbol *ast.Symbol
 	if len(b.ctx.reverseMappedStack) < MAX_REVERSE_MAPPED_NESTING_INSPECTION_DEPTH {
 		return false
 	}
-	if !b.ch.ReverseMappedSymbolLinks.Has(propertySymbol) {
-		return false
-	}
-	propertyLinks := b.ch.ReverseMappedSymbolLinks.TryGet(propertySymbol)
-	propMappedType := propertyLinks.mappedType
+	propMappedType := b.ch.TryGetReverseMappedSymbolMappedType(propertySymbol)
 	if propMappedType == nil || propMappedType.symbol == nil {
 		return false
 	}
@@ -1970,12 +1971,9 @@ func (b *NodeBuilder) shouldUsePlaceholderForProperty(propertySymbol *ast.Symbol
 			break
 		}
 		prop := b.ctx.reverseMappedStack[len(b.ctx.reverseMappedStack)-1-i]
-		if b.ch.ReverseMappedSymbolLinks.Has(prop) {
-			links := b.ch.ReverseMappedSymbolLinks.TryGet(prop)
-			mappedType := links.mappedType
-			if mappedType != nil && mappedType.symbol == propMappedType.symbol {
-				return true
-			}
+		mappedType := b.ch.TryGetReverseMappedSymbolMappedType(prop)
+		if mappedType != nil && mappedType.symbol == propMappedType.symbol {
+			return true
 		}
 	}
 	return false
@@ -1984,7 +1982,7 @@ func (b *NodeBuilder) shouldUsePlaceholderForProperty(propertySymbol *ast.Symbol
 func (b *NodeBuilder) trackComputedName(accessExpression *ast.Node, enclosingDeclaration *ast.Node) {
 	// get symbol of the first identifier of the entityName
 	firstIdentifier := ast.GetFirstIdentifier(accessExpression)
-	name := b.ch.resolveName(firstIdentifier, firstIdentifier.Text(), ast.SymbolFlagsValue|ast.SymbolFlagsExportValue, nil /*nameNotFoundMessage*/, true /*isUse*/, false)
+	name := b.ch.ResolveName(firstIdentifier, firstIdentifier.Text(), ast.SymbolFlagsValue|ast.SymbolFlagsExportValue, nil /*nameNotFoundMessage*/, true /*isUse*/, false)
 	if name != nil {
 		b.ctx.tracker.TrackSymbol(name, enclosingDeclaration, ast.SymbolFlagsValue)
 	}
@@ -2009,11 +2007,11 @@ func (b *NodeBuilder) isStringNamed(d *ast.Declaration) bool {
 		return false
 	}
 	if ast.IsComputedPropertyName(name) {
-		t := b.ch.checkExpression(name.AsComputedPropertyName().Expression)
+		t := b.ch.GetTypeOfExpression(name.AsComputedPropertyName().Expression)
 		return t.flags&TypeFlagsStringLike != 0
 	}
 	if ast.IsElementAccessExpression(name) {
-		t := b.ch.checkExpression(name.AsElementAccessExpression().ArgumentExpression)
+		t := b.ch.GetTypeOfExpression(name.AsElementAccessExpression().ArgumentExpression)
 		return t.flags&TypeFlagsStringLike != 0
 	}
 	return ast.IsStringLiteral(name)
@@ -2034,15 +2032,12 @@ func (b *NodeBuilder) getPropertyNameNodeForSymbol(symbol *ast.Symbol) *ast.Node
 	if fromNameType != nil {
 		return fromNameType
 	}
-	return b.createPropertyNameNodeForIdentifierOrLiteral(symbol.Name, b.ch.compilerOptions.GetEmitScriptTarget(), singleQuote, stringNamed, isMethod)
+	return b.createPropertyNameNodeForIdentifierOrLiteral(symbol.Name, b.ch.GetCompilerOptions().GetEmitScriptTarget(), singleQuote, stringNamed, isMethod)
 }
 
 // See getNameForSymbolFromNameType for a stringy equivalent
 func (b *NodeBuilder) getPropertyNameNodeForSymbolFromNameType(symbol *ast.Symbol, singleQuote bool, stringNamed bool, isMethod bool) *ast.Node {
-	if !b.ch.valueSymbolLinks.Has(symbol) {
-		return nil
-	}
-	nameType := b.ch.valueSymbolLinks.TryGet(symbol).nameType
+	nameType := b.ch.TryGetNameTypeOfSymbol(symbol)
 	if nameType == nil {
 		return nil
 	}
@@ -2054,14 +2049,14 @@ func (b *NodeBuilder) getPropertyNameNodeForSymbolFromNameType(symbol *ast.Symbo
 		case string:
 			name = nameType.AsLiteralType().value.(string)
 		}
-		if !scanner.IsIdentifierText(name, b.ch.compilerOptions.GetEmitScriptTarget()) && (stringNamed || !isNumericLiteralName(name)) {
+		if !scanner.IsIdentifierText(name, b.ch.GetCompilerOptions().GetEmitScriptTarget()) && (stringNamed || !isNumericLiteralName(name)) {
 			// !!! TODO: set singleQuote
 			return b.f.NewStringLiteral(name)
 		}
 		if isNumericLiteralName(name) && name[0] == '-' {
 			return b.f.NewComputedPropertyName(b.f.NewPrefixUnaryExpression(ast.KindMinusToken, b.f.NewNumericLiteral(name[1:])))
 		}
-		return b.createPropertyNameNodeForIdentifierOrLiteral(name, b.ch.compilerOptions.GetEmitScriptTarget(), singleQuote, stringNamed, isMethod)
+		return b.createPropertyNameNodeForIdentifierOrLiteral(name, b.ch.GetCompilerOptions().GetEmitScriptTarget(), singleQuote, stringNamed, isMethod)
 	}
 	if nameType.flags&TypeFlagsUniqueESSymbol != 0 {
 		return b.f.NewComputedPropertyName(b.symbolToExpression(nameType.AsUniqueESSymbolType().symbol, ast.SymbolFlagsValue))
@@ -2073,16 +2068,16 @@ func (b *NodeBuilder) addPropertyToElementList(propertySymbol *ast.Symbol, typeE
 	propertyIsReverseMapped := propertySymbol.CheckFlags&ast.CheckFlagsReverseMapped != 0
 	var propertyType *Type
 	if b.shouldUsePlaceholderForProperty(propertySymbol) {
-		propertyType = b.ch.anyType
+		propertyType = b.ch.GetAnyType()
 	} else {
-		propertyType = b.ch.getNonMissingTypeOfSymbol(propertySymbol)
+		propertyType = b.ch.GetNonMissingTypeOfSymbol(propertySymbol)
 	}
 	saveEnclosingDeclaration := b.ctx.enclosingDeclaration
 	b.ctx.enclosingDeclaration = nil
 	if isLateBoundName(propertySymbol.Name) {
 		if len(propertySymbol.Declarations) > 0 {
 			decl := propertySymbol.Declarations[0]
-			if b.ch.hasLateBindableName(decl) {
+			if b.ch.HasLateBindableName(decl) {
 				if ast.IsBinaryExpression(decl) {
 					name := ast.GetNameOfDeclaration(decl)
 					if name != nil && ast.IsElementAccessExpression(name) && ast.IsPropertyAccessEntityNameExpression(name.AsElementAccessExpression().ArgumentExpression) {
@@ -2093,7 +2088,7 @@ func (b *NodeBuilder) addPropertyToElementList(propertySymbol *ast.Symbol, typeE
 				}
 			}
 		} else {
-			b.ctx.tracker.ReportNonSerializableProperty(b.ch.symbolToString(propertySymbol))
+			b.ctx.tracker.ReportNonSerializableProperty(b.ch.SymbolToString(propertySymbol))
 		}
 	}
 	if propertySymbol.ValueDeclaration != nil {
@@ -2108,17 +2103,17 @@ func (b *NodeBuilder) addPropertyToElementList(propertySymbol *ast.Symbol, typeE
 	b.ctx.approximateLength += len(ast.SymbolName(propertySymbol)) + 1
 
 	if propertySymbol.Flags&ast.SymbolFlagsAccessor != 0 {
-		writeType := b.ch.getWriteTypeOfSymbol(propertySymbol)
-		if propertyType != writeType && !b.ch.isErrorType(propertyType) && !b.ch.isErrorType(writeType) {
+		writeType := b.ch.GetWriteTypeOfSymbol(propertySymbol)
+		if propertyType != writeType && !b.ch.IsErrorType(propertyType) && !b.ch.IsErrorType(writeType) {
 			getterDeclaration := ast.GetDeclarationOfKind(propertySymbol, ast.KindGetAccessor)
-			getterSignature := b.ch.getSignatureFromDeclaration(getterDeclaration)
+			getterSignature := b.ch.GetSignatureFromDeclaration(getterDeclaration)
 			getter := b.signatureToSignatureDeclarationHelper(getterSignature, ast.KindGetAccessor, &SignatureToSignatureDeclarationOptions{
 				name: propertyName,
 			})
 			b.setCommentRange(getter, getterDeclaration)
 			typeElements = append(typeElements, getter)
 			setterDeclaration := ast.GetDeclarationOfKind(propertySymbol, ast.KindSetAccessor)
-			setterSignature := b.ch.getSignatureFromDeclaration(setterDeclaration)
+			setterSignature := b.ch.GetSignatureFromDeclaration(setterDeclaration)
 			setter := b.signatureToSignatureDeclarationHelper(setterSignature, ast.KindSetAccessor, &SignatureToSignatureDeclarationOptions{
 				name: propertyName,
 			})
@@ -2134,8 +2129,8 @@ func (b *NodeBuilder) addPropertyToElementList(propertySymbol *ast.Symbol, typeE
 	} else {
 		optionalToken = nil
 	}
-	if propertySymbol.Flags&(ast.SymbolFlagsFunction|ast.SymbolFlagsMethod) != 0 && len(b.ch.getPropertiesOfObjectType(propertyType)) == 0 && !b.ch.isReadonlySymbol(propertySymbol) {
-		signatures := b.ch.getSignaturesOfType(b.ch.filterType(propertyType, func(t *Type) bool {
+	if propertySymbol.Flags&(ast.SymbolFlagsFunction|ast.SymbolFlagsMethod) != 0 && len(b.ch.GetPropertiesOfObjectType(propertyType)) == 0 && !b.ch.IsReadonlySymbol(propertySymbol) {
+		signatures := b.ch.GetSignaturesOfType(b.ch.FilterType(propertyType, func(t *Type) bool {
 			return t.flags&TypeFlagsUndefined == 0
 		}), SignatureKindCall)
 		for _, signature := range signatures {
@@ -2168,7 +2163,7 @@ func (b *NodeBuilder) addPropertyToElementList(propertySymbol *ast.Symbol, typeE
 	}
 
 	var modifiers *ast.ModifierList
-	if b.ch.isReadonlySymbol(propertySymbol) {
+	if b.ch.IsReadonlySymbol(propertySymbol) {
 		modifiers = b.f.NewModifierList([]*ast.Node{b.f.NewModifier(ast.KindReadonlyKeyword)})
 		b.ctx.approximateLength += 9
 	}
@@ -2244,11 +2239,11 @@ func (b *NodeBuilder) createTypeNodesFromResolvedType(resolvedType *StructuredTy
 }
 
 func (b *NodeBuilder) createTypeNodeFromObjectType(t *Type) *ast.TypeNode {
-	if b.ch.isGenericMappedType(t) || (t.objectFlags&ObjectFlagsMapped != 0 && t.AsMappedType().containsError) {
+	if b.ch.IsGenericMappedType(t) || (t.objectFlags&ObjectFlagsMapped != 0 && t.AsMappedType().containsError) {
 		return b.createMappedTypeNodeFromType(t)
 	}
 
-	resolved := b.ch.resolveStructuredTypeMembers(t)
+	resolved := b.ch.ResolveStructuredTypeMembers(t)
 	callSigs := resolved.CallSignatures()
 	ctorSigs := resolved.ConstructSignatures()
 	if len(resolved.properties) == 0 && len(resolved.indexInfos) == 0 {
@@ -2277,7 +2272,7 @@ func (b *NodeBuilder) createTypeNodeFromObjectType(t *Type) *ast.TypeNode {
 	})
 	if len(abstractSignatures) > 0 {
 		types := core.Map(abstractSignatures, func(s *Signature) *Type {
-			return b.ch.getOrCreateTypeFromSignature(s, nil)
+			return b.ch.GetOrCreateTypeFromSignature(s, nil)
 		})
 		// count the number of type elements excluding abstract constructors
 		typeElementCount := len(callSigs) + (len(ctorSigs) - len(abstractSignatures)) + len(resolved.indexInfos) + (core.IfElse(b.ctx.flags&nodebuilder.FlagsWriteClassExpressionAsTypeLiteral != 0, core.CountWhere(resolved.properties, func(p *ast.Symbol) bool {
@@ -2288,9 +2283,9 @@ func (b *NodeBuilder) createTypeNodeFromObjectType(t *Type) *ast.TypeNode {
 		// and not `(abstract new () => {}) & {}`
 		if typeElementCount != 0 {
 			// create a copy of the object type without any abstract construct signatures.
-			types = append(types, b.getResolvedTypeWithoutAbstractConstructSignatures(resolved))
+			types = append(types, b.ch.GetResolvedTypeWithoutAbstractConstructSignatures(resolved.AsType()))
 		}
-		return b.typeToTypeNodeClosure(b.ch.getIntersectionType(types))
+		return b.typeToTypeNodeClosure(b.ch.GetIntersectionType(types))
 	}
 
 	restoreFlags := b.saveRestoreFlags()
@@ -2303,11 +2298,14 @@ func (b *NodeBuilder) createTypeNodeFromObjectType(t *Type) *ast.TypeNode {
 	return typeLiteralNode
 }
 
-func getTypeAliasForTypeLiteral(c *Checker, t *Type) *ast.Symbol {
+func getTypeAliasForTypeLiteral(c interface {
+	GetSymbolOfDeclaration(node *ast.Node) *ast.Symbol
+}, t *Type,
+) *ast.Symbol {
 	if t.symbol != nil && t.symbol.Flags&ast.SymbolFlagsTypeLiteral != 0 && t.symbol.Declarations != nil {
 		node := ast.WalkUpParenthesizedTypes(t.symbol.Declarations[0].Parent)
 		if ast.IsTypeAliasDeclaration(node) {
-			return c.getSymbolOfDeclaration(node)
+			return c.GetSymbolOfDeclaration(node)
 		}
 	}
 	return nil
@@ -2359,7 +2357,7 @@ func (b *NodeBuilder) createAnonymousTypeNode(t *Type) *ast.TypeNode {
 			return b.visitAndTransformType(t, b.createTypeNodeFromObjectTypeClosure)
 		}
 		var isInstanceType ast.SymbolFlags
-		if isClassInstanceSide(b.ch, t) {
+		if b.ch.IsClassInstanceSide(t) {
 			isInstanceType = ast.SymbolFlagsType
 		} else {
 			isInstanceType = ast.SymbolFlagsValue
@@ -2370,7 +2368,7 @@ func (b *NodeBuilder) createAnonymousTypeNode(t *Type) *ast.TypeNode {
 		// 	// Instance and static types share the same symbol; only add 'typeof' for the static side.
 		// 	return b.symbolToTypeNode(symbol, isInstanceType, nil)
 		// } else
-		if symbol.Flags&ast.SymbolFlagsClass != 0 && b.ch.getBaseTypeVariableOfClass(symbol) == nil && !(symbol.ValueDeclaration != nil && ast.IsClassLike(symbol.ValueDeclaration) && b.ctx.flags&nodebuilder.FlagsWriteClassExpressionAsTypeLiteral != 0 && (!ast.IsClassDeclaration(symbol.ValueDeclaration) || b.ch.IsSymbolAccessible(symbol, b.ctx.enclosingDeclaration, isInstanceType, false /*shouldComputeAliasesToMakeVisible*/).Accessibility != printer.SymbolAccessibilityAccessible)) || symbol.Flags&(ast.SymbolFlagsEnum|ast.SymbolFlagsValueModule) != 0 || b.shouldWriteTypeOfFunctionSymbol(symbol, typeId) {
+		if symbol.Flags&ast.SymbolFlagsClass != 0 && b.ch.GetBaseTypeVariableOfClass(symbol) == nil && !(symbol.ValueDeclaration != nil && ast.IsClassLike(symbol.ValueDeclaration) && b.ctx.flags&nodebuilder.FlagsWriteClassExpressionAsTypeLiteral != 0 && (!ast.IsClassDeclaration(symbol.ValueDeclaration) || b.ch.IsSymbolAccessible(symbol, b.ctx.enclosingDeclaration, isInstanceType, false /*shouldComputeAliasesToMakeVisible*/).Accessibility != printer.SymbolAccessibilityAccessible)) || symbol.Flags&(ast.SymbolFlagsEnum|ast.SymbolFlagsValueModule) != 0 || b.shouldWriteTypeOfFunctionSymbol(symbol, typeId) {
 			return b.symbolToTypeNode(symbol, isInstanceType, nil)
 		} else if _, ok := b.ctx.visitedTypes[typeId]; ok {
 			// If type is an anonymous type literal in a type alias declaration, use type alias name
@@ -2392,12 +2390,12 @@ func (b *NodeBuilder) createAnonymousTypeNode(t *Type) *ast.TypeNode {
 
 func (b *NodeBuilder) getTypeFromTypeNode(node *ast.TypeNode, noMappedTypes bool) *Type {
 	// !!! noMappedTypes optional param support
-	t := b.ch.getTypeFromTypeNode(node)
+	t := b.ch.GetTypeFromTypeNode(node)
 	if b.ctx.mapper == nil {
 		return t
 	}
 
-	instantiated := b.ch.instantiateType(t, b.ctx.mapper)
+	instantiated := b.ch.InstantiateType(t, b.ctx.mapper)
 	if noMappedTypes && instantiated != t {
 		return nil
 	}
@@ -2423,7 +2421,7 @@ func (b *NodeBuilder) conditionalTypeToTypeNode(_t *Type) *ast.TypeNode {
 	checkTypeNode := b.typeToTypeNodeClosure(t.checkType)
 	b.ctx.approximateLength += 15
 	if b.ctx.flags&nodebuilder.FlagsGenerateNamesForShadowedTypeParams != 0 && t.root.isDistributive && t.checkType.flags&TypeFlagsTypeParameter == 0 {
-		newParam := b.ch.newTypeParameter(b.ch.newSymbol(ast.SymbolFlagsTypeParameter, "T" /* as __String */))
+		newParam := b.ch.NewTypeParameter()
 		name := b.typeParameterToName(newParam)
 		newTypeVariable := b.f.NewTypeReferenceNode(name.AsNode(), nil)
 		b.ctx.approximateLength += 37
@@ -2431,10 +2429,10 @@ func (b *NodeBuilder) conditionalTypeToTypeNode(_t *Type) *ast.TypeNode {
 		newMapper := prependTypeMapping(t.root.checkType, newParam, t.mapper)
 		saveInferTypeParameters := b.ctx.inferTypeParameters
 		b.ctx.inferTypeParameters = t.root.inferTypeParameters
-		extendsTypeNode := b.typeToTypeNodeClosure(b.ch.instantiateType(t.root.extendsType, newMapper))
+		extendsTypeNode := b.typeToTypeNodeClosure(b.ch.InstantiateType(t.root.extendsType, newMapper))
 		b.ctx.inferTypeParameters = saveInferTypeParameters
-		trueTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.instantiateType(b.getTypeFromTypeNode(t.root.node.TrueType, false), newMapper))
-		falseTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.instantiateType(b.getTypeFromTypeNode(t.root.node.FalseType, false), newMapper))
+		trueTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.InstantiateType(b.getTypeFromTypeNode(t.root.node.TrueType, false), newMapper))
+		falseTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.InstantiateType(b.getTypeFromTypeNode(t.root.node.FalseType, false), newMapper))
 
 		// outermost conditional makes `T` a type parameter, allowing the inner conditionals to be distributive
 		// second conditional makes `T` have `T & checkType` substitution, so it is correctly usable as the checkType
@@ -2456,8 +2454,8 @@ func (b *NodeBuilder) conditionalTypeToTypeNode(_t *Type) *ast.TypeNode {
 	b.ctx.inferTypeParameters = t.root.inferTypeParameters
 	extendsTypeNode := b.typeToTypeNodeClosure(t.extendsType)
 	b.ctx.inferTypeParameters = saveInferTypeParameters
-	trueTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.getTrueTypeFromConditionalType(_t))
-	falseTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.getFalseTypeFromConditionalType(_t))
+	trueTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.GetTrueTypeFromConditionalType(_t))
+	falseTypeNode := b.typeToTypeNodeOrCircularityElision(b.ch.GetFalseTypeFromConditionalType(_t))
 	return b.f.NewConditionalTypeNode(checkTypeNode, extendsTypeNode, trueTypeNode, falseTypeNode)
 }
 
@@ -2473,19 +2471,19 @@ func (b *NodeBuilder) getParentSymbolOfTypeParameter(typeParameter *TypeParamete
 	if host == nil {
 		return nil
 	}
-	return b.ch.getSymbolOfNode(host)
+	return b.ch.GetSymbolOfNode(host)
 }
 
 func (b *NodeBuilder) typeReferenceToTypeNode(t *Type) *ast.TypeNode {
-	var typeArguments []*Type = b.ch.getTypeArguments(t)
-	if t.Target() == b.ch.globalArrayType || t.Target() == b.ch.globalReadonlyArrayType {
+	var typeArguments []*Type = b.ch.GetTypeArguments(t)
+	if t.Target() == b.ch.GetGlobalArrayType() || t.Target() == b.ch.GetGlobalReadonlyArrayType() {
 		if b.ctx.flags&nodebuilder.FlagsWriteArrayAsGenericType != 0 {
 			typeArgumentNode := b.typeToTypeNodeClosure(typeArguments[0])
-			return b.f.NewTypeReferenceNode(b.f.NewIdentifier(core.IfElse(t.Target() == b.ch.globalArrayType, "Array", "ReadonlyArray")), b.f.NewNodeList([]*ast.TypeNode{typeArgumentNode}))
+			return b.f.NewTypeReferenceNode(b.f.NewIdentifier(core.IfElse(t.Target() == b.ch.GetGlobalArrayType(), "Array", "ReadonlyArray")), b.f.NewNodeList([]*ast.TypeNode{typeArgumentNode}))
 		}
 		elementType := b.typeToTypeNodeClosure(typeArguments[0])
 		arrayType := b.f.NewArrayTypeNode(elementType)
-		if t.Target() == b.ch.globalArrayType {
+		if t.Target() == b.ch.GetGlobalArrayType() {
 			return arrayType
 		} else {
 			return b.f.NewTypeOperatorNode(ast.KindReadonlyKeyword, arrayType)
@@ -2496,10 +2494,10 @@ func (b *NodeBuilder) typeReferenceToTypeNode(t *Type) *ast.TypeNode {
 			if i < len(t.Target().AsTupleType().elementInfos) {
 				isOptional = t.Target().AsTupleType().elementInfos[i].flags&ElementFlagsOptional != 0
 			}
-			return b.ch.removeMissingType(arg, isOptional)
+			return b.ch.RemoveMissingType(arg, isOptional)
 		})
 		if len(typeArguments) > 0 {
-			arity := b.ch.getTypeReferenceArity(t)
+			arity := b.ch.GetTypeReferenceArity(t)
 			tupleConstituentNodes := b.mapToTypeNodes(typeArguments[0:arity])
 			if tupleConstituentNodes != nil {
 				for i := 0; i < len(tupleConstituentNodes.Nodes); i++ {
@@ -2507,7 +2505,7 @@ func (b *NodeBuilder) typeReferenceToTypeNode(t *Type) *ast.TypeNode {
 					labeledElementDeclaration := t.Target().AsTupleType().elementInfos[i].labeledDeclaration
 
 					if labeledElementDeclaration != nil {
-						tupleConstituentNodes.Nodes[i] = b.f.NewNamedTupleMember(core.IfElse(flags&ElementFlagsVariable != 0, b.f.NewToken(ast.KindDotDotDotToken), nil), b.f.NewIdentifier(b.ch.getTupleElementLabel(t.Target().AsTupleType().elementInfos[i], nil, i)), core.IfElse(flags&ElementFlagsOptional != 0, b.f.NewToken(ast.KindQuestionToken), nil), core.IfElse(flags&ElementFlagsRest != 0, b.f.NewArrayTypeNode(tupleConstituentNodes.Nodes[i]), tupleConstituentNodes.Nodes[i]))
+						tupleConstituentNodes.Nodes[i] = b.f.NewNamedTupleMember(core.IfElse(flags&ElementFlagsVariable != 0, b.f.NewToken(ast.KindDotDotDotToken), nil), b.f.NewIdentifier(b.ch.GetTupleElementLabel(t.Target().AsTupleType().elementInfos[i], nil, i)), core.IfElse(flags&ElementFlagsOptional != 0, b.f.NewToken(ast.KindQuestionToken), nil), core.IfElse(flags&ElementFlagsRest != 0, b.f.NewArrayTypeNode(tupleConstituentNodes.Nodes[i]), tupleConstituentNodes.Nodes[i]))
 					} else {
 						switch {
 						case flags&ElementFlagsVariable != 0:
@@ -2581,13 +2579,13 @@ func (b *NodeBuilder) typeReferenceToTypeNode(t *Type) *ast.TypeNode {
 				// identical to their associated type parameters' defaults for `Iterable`, `IterableIterator`,
 				// `AsyncIterable`, and `AsyncIterableIterator` to provide backwards-compatible .d.ts emit due
 				// to each now having three type parameters instead of only one.
-				if b.ch.isReferenceToType(t, b.ch.getGlobalIterableType()) || b.ch.isReferenceToType(t, b.ch.getGlobalIterableIteratorType()) || b.ch.isReferenceToType(t, b.ch.getGlobalAsyncIterableType()) || b.ch.isReferenceToType(t, b.ch.getGlobalAsyncIterableIteratorType()) {
+				if b.ch.IsReferenceToType(t, b.ch.GetGlobalIterableType()) || b.ch.IsReferenceToType(t, b.ch.GetGlobalIterableIteratorType()) || b.ch.IsReferenceToType(t, b.ch.GetGlobalAsyncIterableType()) || b.ch.IsReferenceToType(t, b.ch.GetGlobalAsyncIterableIteratorType()) {
 					if t.AsTypeReference().node == nil || !ast.IsTypeReferenceNode(t.AsTypeReference().node) || t.AsTypeReference().node.TypeArguments() == nil || len(t.AsTypeReference().node.TypeArguments()) < typeParameterCount {
 						for typeParameterCount > 0 {
 							typeArgument := typeArguments[typeParameterCount-1]
 							typeParameter := t.Target().AsInterfaceType().TypeParameters()[typeParameterCount-1]
-							defaultType := b.ch.getDefaultFromTypeParameter(typeParameter)
-							if defaultType == nil || !b.ch.isTypeIdenticalTo(typeArgument, defaultType) {
+							defaultType := b.ch.GetDefaultFromTypeParameter(typeParameter)
+							if defaultType == nil || !b.ch.IsTypeIdenticalTo(typeArgument, defaultType) {
 								break
 							}
 							typeParameterCount--
@@ -2710,7 +2708,7 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 	}
 
 	if b.ctx.flags&nodebuilder.FlagsNoTypeReduction == 0 {
-		t = b.ch.getReducedType(t)
+		t = b.ch.GetReducedType(t)
 	}
 
 	if t.flags&TypeFlagsAny != 0 {
@@ -2722,7 +2720,7 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 		// 	return e.AddSyntheticLeadingComment(b.f.NewKeywordTypeNode(ast.KindAnyKeyword), ast.KindMultiLineCommentTrivia, "unresolved")
 		// }
 		b.ctx.approximateLength += 3
-		return b.f.NewKeywordTypeNode(core.IfElse(t == b.ch.intrinsicMarkerType, ast.KindIntrinsicKeyword, ast.KindAnyKeyword))
+		return b.f.NewKeywordTypeNode(core.IfElse(t == b.ch.GetIntrinsicMarkerType(), ast.KindIntrinsicKeyword, ast.KindAnyKeyword))
 	}
 	if t.flags&TypeFlagsUnknown != 0 {
 		return b.f.NewKeywordTypeNode(ast.KindUnknownKeyword)
@@ -2745,9 +2743,9 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 	}
 	if t.flags&TypeFlagsEnumLike != 0 {
 		if t.symbol.Flags&ast.SymbolFlagsEnumMember != 0 {
-			parentSymbol := b.ch.getParentOfSymbol(t.symbol)
+			parentSymbol := b.ch.GetParentOfSymbol(t.symbol)
 			parentName := b.symbolToTypeNode(parentSymbol, ast.SymbolFlagsType, nil)
-			if b.ch.getDeclaredTypeOfSymbol(parentSymbol) == t {
+			if b.ch.GetDeclaredTypeOfSymbol(parentSymbol) == t {
 				return parentName
 			}
 			memberName := ast.SymbolName(t.symbol)
@@ -2846,7 +2844,7 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 		if isReservedMemberName(sym.Name) && sym.Flags&ast.SymbolFlagsClass == 0 {
 			return b.f.NewTypeReferenceNode(b.f.NewIdentifier(""), typeArgumentNodes)
 		}
-		if typeArgumentNodes != nil && len(typeArgumentNodes.Nodes) == 1 && sym == b.ch.globalArrayType.symbol {
+		if typeArgumentNodes != nil && len(typeArgumentNodes.Nodes) == 1 && sym == b.ch.GetGlobalArrayType().symbol {
 			return b.f.NewArrayTypeNode(typeArgumentNodes.Nodes[0])
 		}
 		return b.symbolToTypeNode(sym, ast.SymbolFlagsType, typeArgumentNodes)
@@ -2866,14 +2864,14 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 		if t.flags&TypeFlagsTypeParameter != 0 && slices.Contains(b.ctx.inferTypeParameters, t) {
 			b.ctx.approximateLength += len(ast.SymbolName(t.symbol)) + 6
 			var constraintNode *ast.TypeNode
-			constraint := b.ch.getConstraintOfTypeParameter(t)
+			constraint := b.ch.GetConstraintOfTypeParameter(t)
 			if constraint != nil {
 				// If the infer type has a constraint that is not the same as the constraint
 				// we would have normally inferred based on b, we emit the constraint
 				// using `infer T extends ?`. We omit inferred constraints from type references
 				// as they may be elided.
-				inferredConstraint := b.ch.getInferredTypeParameterConstraint(t, true /*omitTypeReferences*/)
-				if !(inferredConstraint != nil && b.ch.isTypeIdenticalTo(constraint, inferredConstraint)) {
+				inferredConstraint := b.ch.GetInferredTypeParameterConstraint(t, true /*omitTypeReferences*/)
+				if !(inferredConstraint != nil && b.ch.IsTypeIdenticalTo(constraint, inferredConstraint)) {
 					b.ctx.approximateLength += 9
 					constraintNode = b.typeToTypeNodeClosure(constraint)
 				}
@@ -2890,8 +2888,8 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 			return b.symbolToTypeNode(t.symbol, ast.SymbolFlagsType, nil)
 		}
 		var name string
-		if (t == b.ch.markerSuperTypeForCheck || t == b.ch.markerSubTypeForCheck) && b.ch.varianceTypeParameter != nil && b.ch.varianceTypeParameter.symbol != nil {
-			name = (core.IfElse(t == b.ch.markerSubTypeForCheck, "sub-", "super-")) + ast.SymbolName(b.ch.varianceTypeParameter.symbol)
+		if (t == b.ch.GetMarkerSuperTypeForCheck() || t == b.ch.GetMarkerSubTypeForCheck()) && b.ch.GetVarianceTypeParameter() != nil && b.ch.GetVarianceTypeParameter().symbol != nil {
+			name = (core.IfElse(t == b.ch.GetMarkerSubTypeForCheck(), "sub-", "super-")) + ast.SymbolName(b.ch.GetVarianceTypeParameter().symbol)
 		} else {
 			name = "?"
 		}
@@ -2903,7 +2901,7 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 	if t.flags&(TypeFlagsUnion|TypeFlagsIntersection) != 0 {
 		var types []*Type
 		if t.flags&TypeFlagsUnion != 0 {
-			types = b.ch.formatUnionTypes(t.AsUnionType().types)
+			types = b.ch.FormatUnionTypes(t.AsUnionType().types)
 		} else {
 			types = t.AsIntersectionType().types
 		}
@@ -2967,10 +2965,10 @@ func (b *NodeBuilder) typeToTypeNode(t *Type) *ast.TypeNode {
 	}
 	if t.flags&TypeFlagsSubstitution != 0 {
 		typeNode := b.typeToTypeNodeClosure(t.AsSubstitutionType().baseType)
-		if !b.ch.isNoInferType(t) {
+		if !b.ch.IsNoInferType(t) {
 			return typeNode
 		}
-		noInferSymbol := b.ch.getGlobalTypeAliasSymbol("NoInfer", 1, false)
+		noInferSymbol := b.ch.GetGlobalTypeAliasSymbol("NoInfer", 1, false)
 		if noInferSymbol != nil {
 			return b.symbolToTypeNode(noInferSymbol, ast.SymbolFlagsType, b.f.NewNodeList([]*ast.Node{typeNode}))
 		} else {

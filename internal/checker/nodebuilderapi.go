@@ -106,11 +106,11 @@ func (b *NodeBuilderAPI) IndexInfoToIndexSignatureDeclaration(info *IndexInfo, e
 // SerializeReturnTypeForSignature implements NodeBuilderInterface.
 func (b *NodeBuilderAPI) SerializeReturnTypeForSignature(signatureDeclaration *ast.Node, enclosingDeclaration *ast.Node, flags nodebuilder.Flags, internalFlags nodebuilder.InternalFlags, tracker nodebuilder.SymbolTracker) *ast.Node {
 	b.enterContext(enclosingDeclaration, flags, internalFlags, tracker)
-	signature := b.impl.ch.getSignatureFromDeclaration(signatureDeclaration)
-	symbol := b.impl.ch.getSymbolOfDeclaration(signatureDeclaration)
+	signature := b.impl.ch.GetSignatureFromDeclaration(signatureDeclaration)
+	symbol := b.impl.ch.GetSymbolOfDeclaration(signatureDeclaration)
 	returnType, ok := b.impl.ctx.enclosingSymbolTypes[ast.GetSymbolId(symbol)]
 	if !ok || returnType == nil {
-		returnType = b.impl.ch.instantiateType(b.impl.ch.getReturnTypeOfSignature(signature), b.impl.ctx.mapper)
+		returnType = b.impl.ch.InstantiateType(b.impl.ch.GetReturnTypeOfSignature(signature), b.impl.ctx.mapper)
 	}
 	return b.exitContext(b.impl.serializeInferredReturnTypeForSignature(signature, returnType))
 }
