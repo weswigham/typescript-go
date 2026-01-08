@@ -301,7 +301,11 @@ func (w *formatSpanWorker) execute(s *formattingScanner) []core.TextChange {
 			// to perform a trailing edit at the end of the selection range: but there can be no valid
 			// edit in the middle of a token where the range ended, so if we have a non-contiguous
 			// pair here, we're already done and we can ignore it.
-			parent := astnav.FindPrecedingToken(w.sourceFile, tokenInfo.Loc.End())
+			prevToken := astnav.FindPrecedingToken(w.sourceFile, tokenInfo.Loc.End())
+			var parent *ast.Node
+			if prevToken != nil {
+				parent = prevToken.Parent
+			}
 			if parent == nil {
 				parent = w.previousParent
 			}
