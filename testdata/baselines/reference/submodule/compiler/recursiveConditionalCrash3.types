@@ -156,10 +156,10 @@ export type Expand<T extends object, K extends AllKeys<T, N> = never, N extends 
  * These two functions work as charm, also they are superfast and as expected they don't use additional Memory
  */
 let y1: Expand<X>
->y1 : { id: string; name: string; user: string; role: string; roles: string; }
+>y1 : { id: not U[] & not CanBeExpanded<object, string> & string; name: not U[] & not CanBeExpanded<object, string> & string; user: not U[] & not CanBeExpanded<object, string> & string; role: not U[] & not CanBeExpanded<object, string> & string; roles: not U[] & not CanBeExpanded<object, string> & string; }
 
 let y2: Expand<X, 'user.role.user.role'>
->y2 : { id: string; name: string; user: { id: string; role: { id: string; user: { id: string; role: string; note: string; }; x: string; }; note: string; }; role: string; roles: string; }
+>y2 : { id: not U[] & not CanBeExpanded<object, string> & string; name: not U[] & not CanBeExpanded<object, string> & string; user: { id: not U[] & not CanBeExpanded<object, string> & string; role: { id: not U[] & not CanBeExpanded<object, string> & string; user: { id: not CanBeExpanded<object, string> & string; role: string; note: not CanBeExpanded<object, string> & string; }; x: not U[] & not CanBeExpanded<object, string> & string; }; note: not U[] & not CanBeExpanded<object, string> & string; }; role: not U[] & not CanBeExpanded<object, string> & string; roles: not U[] & not CanBeExpanded<object, string> & string; }
 
 
 /**
@@ -197,5 +197,5 @@ type UseQueryOptions4<T , K  > = ExpandResult<T,K>
  *
  */
 let t: UseQueryOptions<X, 'role.user.role'>
->t : { id: string; name: string; user: string; role: { id: string; user: { id: string; role: { id: string; user: string; x: string; }; note: string; }; x: string; }; roles: string; }
+>t : { id: not U[] & not CanBeExpanded<object, string> & string; name: not U[] & not CanBeExpanded<object, string> & string; user: not U[] & not CanBeExpanded<object, string> & string; role: { id: not U[] & not CanBeExpanded<object, string> & string; user: { id: not U[] & not CanBeExpanded<object, string> & string; role: { id: not CanBeExpanded<object, string> & string; user: string; x: not CanBeExpanded<object, string> & string; }; note: not U[] & not CanBeExpanded<object, string> & string; }; x: not U[] & not CanBeExpanded<object, string> & string; }; roles: not U[] & not CanBeExpanded<object, string> & string; }
 

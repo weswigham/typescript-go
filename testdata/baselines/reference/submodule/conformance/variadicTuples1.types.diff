@@ -1,0 +1,45 @@
+--- old.variadicTuples1.types
++++ new.variadicTuples1.types
+@@= skipped -927, +927 lines =@@
+ >T32 : []
+
+ type T33 = DropLast<[number, symbol, ...string[]]>;
+->T33 : [number, symbol, ...string[]]
++>T33 : (string | number | symbol)[]
+
+ type T34 = DropLast<[symbol, ...string[]]>;
+->T34 : [symbol, ...string[]]
++>T34 : (string | symbol)[]
+
+ type T35 = DropLast<[string?]>;
+->T35 : [(string | undefined)?]
++>T35 : (string | undefined)[]
+
+ type T36 = DropLast<string[]>;
+ >T36 : string[]
+
+ type T37 = DropLast<[]>;  // unknown[], maybe should be []
+->T37 : []
++>T37 : never[]
+
+ type T38 = DropLast<any>;
+ >T38 : any[] | unknown[]
+@@= skipped -93, +93 lines =@@
+ >R32 : []
+
+ type R33 = DropLast<readonly [number, symbol, ...string[]]>;
+->R33 : [number, symbol, ...string[]]
++>R33 : (string | number | symbol)[]
+
+ type R34 = DropLast<readonly [symbol, ...string[]]>;
+->R34 : [symbol, ...string[]]
++>R34 : (string | symbol)[]
+
+ type R35 = DropLast<readonly string[]>;
+ >R35 : string[]
+
+ type R36 = DropLast<readonly []>;
+->R36 : []
++>R36 : never[]
+
+ // Inference to [...T, ...U] with implied arity for T

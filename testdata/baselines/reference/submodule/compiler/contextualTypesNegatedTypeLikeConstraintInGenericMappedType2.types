@@ -36,20 +36,20 @@ const matcher = typeTags<Value>();
 matcher({
 >matcher({  A: (_) => _.a,  B: (_) => "fail",}) : unknown
 >matcher : <P extends { readonly [Tag in Tags<"_tag", Value> & string]: (_: Extract<Value, { readonly _tag: Tag; }>) => any; } & { readonly [Tag in Exclude<keyof P, Tags<"_tag", Value>>]: never; }>(fields: P) => unknown
->{  A: (_) => _.a,  B: (_) => "fail",} : { A: (_: { _tag: "A"; a: number; }) => number; B: (_: { _tag: "B"; b: number; }) => string; }
+>{  A: (_) => _.a,  B: (_) => "fail",} : { A: (_: any) => any; B: (_: any) => "fail"; }
 
   A: (_) => _.a,
->A : (_: { _tag: "A"; a: number; }) => number
->(_) => _.a : (_: { _tag: "A"; a: number; }) => number
->_ : { _tag: "A"; a: number; }
->_.a : number
->_ : { _tag: "A"; a: number; }
->a : number
+>A : (_: any) => any
+>(_) => _.a : (_: any) => any
+>_ : any
+>_.a : any
+>_ : any
+>a : any
 
   B: (_) => "fail",
->B : (_: { _tag: "B"; b: number; }) => string
->(_) => "fail" : (_: { _tag: "B"; b: number; }) => string
->_ : { _tag: "B"; b: number; }
+>B : (_: any) => "fail"
+>(_) => "fail" : (_: any) => "fail"
+>_ : any
 >"fail" : "fail"
 
 });
@@ -57,20 +57,20 @@ matcher({
 matcher({
 >matcher({  A: (_) => _.a,  B: (_) => "fail",  C: (_) => "fail",}) : unknown
 >matcher : <P extends { readonly [Tag in Tags<"_tag", Value> & string]: (_: Extract<Value, { readonly _tag: Tag; }>) => any; } & { readonly [Tag in Exclude<keyof P, Tags<"_tag", Value>>]: never; }>(fields: P) => unknown
->{  A: (_) => _.a,  B: (_) => "fail",  C: (_) => "fail",} : { A: (_: { _tag: "A"; a: number; }) => number; B: (_: { _tag: "B"; b: number; }) => string; C: (_: any) => string; }
+>{  A: (_) => _.a,  B: (_) => "fail",  C: (_) => "fail",} : { A: (_: any) => any; B: (_: any) => string; C: (_: any) => string; }
 
   A: (_) => _.a,
->A : (_: { _tag: "A"; a: number; }) => number
->(_) => _.a : (_: { _tag: "A"; a: number; }) => number
->_ : { _tag: "A"; a: number; }
->_.a : number
->_ : { _tag: "A"; a: number; }
->a : number
+>A : (_: any) => any
+>(_) => _.a : (_: any) => any
+>_ : any
+>_.a : any
+>_ : any
+>a : any
 
   B: (_) => "fail",
->B : (_: { _tag: "B"; b: number; }) => string
->(_) => "fail" : (_: { _tag: "B"; b: number; }) => string
->_ : { _tag: "B"; b: number; }
+>B : (_: any) => string
+>(_) => "fail" : (_: any) => string
+>_ : any
 >"fail" : "fail"
 
   C: (_) => "fail",

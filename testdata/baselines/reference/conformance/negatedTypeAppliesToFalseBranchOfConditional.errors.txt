@@ -1,6 +1,4 @@
-negatedTypeAppliesToFalseBranchOfConditional.ts(5,47): error TS2344: Type 'T' does not satisfy the constraint 'number'.
-  Type 'string | number' is not assignable to type 'number'.
-    Type 'string' is not assignable to type 'number'.
+negatedTypeAppliesToFalseBranchOfConditional.ts(5,47): error TS2344: Type 'not string & T' does not satisfy the constraint 'number'.
 
 
 ==== negatedTypeAppliesToFalseBranchOfConditional.ts (1 errors) ====
@@ -10,7 +8,5 @@ negatedTypeAppliesToFalseBranchOfConditional.ts(5,47): error TS2344: Type 'T' do
     type ToNumber<T extends number | string> =
         T extends string ? undefined : OnlyNumber<T>;
                                                   ~
-!!! error TS2344: Type 'T' does not satisfy the constraint 'number'.
-!!! error TS2344:   Type 'string | number' is not assignable to type 'number'.
-!!! error TS2344:     Type 'string' is not assignable to type 'number'.
+!!! error TS2344: Type 'not string & T' does not satisfy the constraint 'number'.
     

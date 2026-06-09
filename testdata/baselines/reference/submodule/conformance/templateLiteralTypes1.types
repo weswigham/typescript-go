@@ -232,13 +232,13 @@ type Trim<S extends string> =
     S;
 
 type TR1 = Trim<'xx   '>;  // 'xx'
->TR1 : "xx"
+>TR1 : not ` ${T}` & "xx"
 
 type TR2 = Trim<'   xx'>;  // 'xx'
->TR2 : "xx"
+>TR2 : not ` ${T}` & "xx"
 
 type TR3 = Trim<'   xx   '>;  // 'xx'
->TR3 : "xx"
+>TR3 : not ` ${T}` & "xx"
 
 type Split<S extends string, D extends string> =
 >Split : Split<S, D>

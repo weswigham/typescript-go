@@ -1,0 +1,20 @@
+--- old.verbatim-declarations-parameters.types
++++ new.verbatim-declarations-parameters.types
+@@= skipped -15, +15 lines =@@
+ >reuseTypeNode : { [x: string]: any; } | undefined
+
+     public reuseTypeNode2?: Exclude<MapOrUndefined, "dummy">,
+->reuseTypeNode2 : { [x: string]: any; } | undefined
++>reuseTypeNode2 : (not "dummy" & { [x: string]: any; }) | undefined
+
+     // Resolve type node, requires adding | undefined
+     public resolveType?: Map,
+@@= skipped -18, +18 lines =@@
+ >{} : {}
+
+     reuseTypeNode2: Exclude<MapOrUndefined, "dummy">  = {},
+->reuseTypeNode2 : { [x: string]: any; } | undefined
++>reuseTypeNode2 : (not "dummy" & { [x: string]: any; }) | undefined
+ >{} : {}
+
+     // Resolve type node, requires adding | undefined

@@ -216,6 +216,13 @@ type SubstitutionTypeKey struct {
 	constraintId TypeId
 }
 
+// ConditionalFlowTypeKey
+
+type ConditionalFlowTypeKey struct {
+	typeId TypeId
+	node   *ast.Node
+}
+
 // ReverseMappedTypeKey
 
 type ReverseMappedTypeKey struct {
@@ -634,6 +641,7 @@ type Checker struct {
 	instantiationExpressionTypes                map[InstantiationExpressionKey]*Type
 	substitutionTypes                           map[SubstitutionTypeKey]*Type
 	negatedTypes                                map[TypeId]*Type
+	conditionalFlowTypes                        map[ConditionalFlowTypeKey]*Type
 	reverseMappedCache                          map[ReverseMappedTypeKey]*Type
 	reverseHomomorphicMappedCache               map[ReverseMappedTypeKey]*Type
 	iterationTypesCache                         map[IterationTypesKey]IterationTypes
@@ -945,6 +953,7 @@ func NewChecker(program Program, tracer *Tracer) (*Checker, *sync.Mutex) {
 	c.instantiationExpressionTypes = make(map[InstantiationExpressionKey]*Type)
 	c.substitutionTypes = make(map[SubstitutionTypeKey]*Type)
 	c.negatedTypes = make(map[TypeId]*Type)
+	c.conditionalFlowTypes = make(map[ConditionalFlowTypeKey]*Type)
 	c.reverseMappedCache = make(map[ReverseMappedTypeKey]*Type)
 	c.reverseHomomorphicMappedCache = make(map[ReverseMappedTypeKey]*Type)
 	c.iterationTypesCache = make(map[IterationTypesKey]IterationTypes)
@@ -17139,7 +17148,7 @@ func (c *Checker) getDefaultConstraintOfConditionalType(t *Type) *Type {
 		// just `any`. This result is _usually_ unwanted - so instead here we elide an `any` branch from the constraint type,
 		// in effect treating `any` like `never` rather than `unknown` in this location.
 		trueConstraint := c.getInferredTrueTypeFromConditionalType(t)
-		falseConstraint := c.getFalseTypeFromConditionalType(t)
+		falseConstraint := c.getInferredFalseTypeFromConditionalType(t)
 		switch {
 		case IsTypeAny(trueConstraint):
 			d.resolvedDefaultConstraint = falseConstraint
@@ -24201,6 +24210,7 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 		checkTuples := c.isSimpleTupleType(checkTypeNode) && c.isSimpleTupleType(extendsTypeNode) && len(checkTypeNode.Elements()) == len(extendsTypeNode.Elements())
 		checkTypeDeferred := c.isDeferredType(checkType, checkTuples)
 		var combinedMapper *TypeMapper
+		var falseCombinedMapper *TypeMapper
 		if len(root.inferTypeParameters) != 0 {
 			// When we're looking at making an inference for an infer type, when we get its constraint, it'll automagically be
 			// instantiated with the context, so it doesn't need the mapper for the inference context - however the constraint
@@ -24219,6 +24229,15 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 			context := c.newInferenceContext(root.inferTypeParameters, nil /*signature*/, InferenceFlagsNone, nil)
 			if mapper != nil {
 				context.nonFixingMapper = c.combineTypeMappers(context.nonFixingMapper, mapper)
+			}
+			// The false branch does not benefit from inferences made in the check type, so it maps the
+			// 'infer T' type parameters to their defaults using a clone of the inference context taken
+			// before any inferences are made.
+			falseInferenceMapper := c.cloneInferenceContext(context, InferenceFlagsNone).mapper
+			if mapper != nil {
+				falseCombinedMapper = c.combineTypeMappers(falseInferenceMapper, mapper)
+			} else {
+				falseCombinedMapper = falseInferenceMapper
 			}
 			if !checkTypeDeferred {
 				// We don't want inferences from constraints as they may cause us to eagerly resolve the
@@ -24278,7 +24297,7 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 						continue
 					}
 				}
-				result = c.instantiateType(falseType, mapper)
+				result = c.instantiateType(falseType, core.OrElse(falseCombinedMapper, mapper))
 				break
 			}
 			// Return trueType for a definitely true extends check. We check instantiations of the two
@@ -24303,7 +24322,7 @@ func (c *Checker) getConditionalType(root *ConditionalRoot, mapper *TypeMapper, 
 			}
 		}
 		// Return a deferred type for a check that is neither definitely true nor definitely false
-		result = c.newConditionalType(root, mapper, combinedMapper)
+		result = c.newConditionalType(root, mapper, combinedMapper, falseCombinedMapper)
 		if alias != nil {
 			result.alias = alias
 		} else {
@@ -24436,6 +24455,18 @@ func (c *Checker) getInferredTrueTypeFromConditionalType(t *Type) *Type {
 		}
 	}
 	return d.resolvedInferredTrueType
+}
+
+func (c *Checker) getInferredFalseTypeFromConditionalType(t *Type) *Type {
+	d := t.AsConditionalType()
+	if d.resolvedInferredFalseType == nil {
+		if d.falseCombinedMapper != nil {
+			d.resolvedInferredFalseType = c.instantiateType(c.getTypeFromTypeNode(d.root.node.FalseType), d.falseCombinedMapper)
+		} else {
+			d.resolvedInferredFalseType = c.getFalseTypeFromConditionalType(t)
+		}
+	}
+	return d.resolvedInferredFalseType
 }
 
 func (c *Checker) getTypeFromInferTypeNode(node *ast.Node) *Type {
@@ -24830,6 +24861,10 @@ func (c *Checker) getUniqueLiteralTypeForTypeParameter(t *Type) *Type {
 }
 
 func (c *Checker) getConditionalFlowTypeOfType(t *Type, node *ast.Node) *Type {
+	key := ConditionalFlowTypeKey{typeId: t.id, node: node}
+	if cached, ok := c.conditionalFlowTypes[key]; ok {
+		return cached
+	}
 	var constraints []*Type
 	covariant := true
 	for node != nil && !ast.IsStatement(node) && node.Kind != ast.KindJSDoc {
@@ -24841,10 +24876,16 @@ func (c *Checker) getConditionalFlowTypeOfType(t *Type, node *ast.Node) *Type {
 		}
 		// Always substitute on type parameters, regardless of variance, since even
 		// in contravariant positions, they may rely on substituted constraints to be valid
-		if (covariant || t.flags&TypeFlagsTypeVariable != 0) && ast.IsConditionalTypeNode(parent) && node == parent.AsConditionalTypeNode().TrueType {
+		if (covariant || t.flags&TypeFlagsTypeVariable != 0) && ast.IsConditionalTypeNode(parent) && (node == parent.AsConditionalTypeNode().TrueType || node == parent.AsConditionalTypeNode().FalseType) {
 			constraint := c.getImpliedConstraint(t, parent.AsConditionalTypeNode().CheckType, parent.AsConditionalTypeNode().ExtendsType)
 			if constraint != nil {
-				constraints = append(constraints, constraint)
+				if node == parent.AsConditionalTypeNode().TrueType {
+					constraints = append(constraints, constraint)
+				} else {
+					// In the false branch, the check type is known to not be assignable to the
+					// extends type, so we can substitute the negation of the implied constraint.
+					constraints = append(constraints, c.getNegatedType(constraint))
+				}
 			}
 		} else if t.flags&TypeFlagsTypeParameter != 0 && ast.IsMappedTypeNode(parent) && parent.AsMappedTypeNode().NameType == nil && node == parent.Type() {
 			mappedType := c.getTypeFromTypeNode(parent)
@@ -24860,10 +24901,12 @@ func (c *Checker) getConditionalFlowTypeOfType(t *Type, node *ast.Node) *Type {
 		}
 		node = parent
 	}
+	result := t
 	if len(constraints) != 0 {
-		return c.getSubstitutionType(t, c.getIntersectionType(constraints))
+		result = c.getSubstitutionType(t, c.getIntersectionType(constraints))
 	}
-	return t
+	c.conditionalFlowTypes[key] = result
+	return result
 }
 
 func (c *Checker) getImpliedConstraint(t *Type, checkNode *ast.Node, extendsNode *ast.Node) *Type {
@@ -25107,13 +25150,14 @@ func (c *Checker) newStringMappingType(symbol *ast.Symbol, target *Type) *Type {
 	return t
 }
 
-func (c *Checker) newConditionalType(root *ConditionalRoot, mapper *TypeMapper, combinedMapper *TypeMapper) *Type {
+func (c *Checker) newConditionalType(root *ConditionalRoot, mapper *TypeMapper, combinedMapper *TypeMapper, falseCombinedMapper *TypeMapper) *Type {
 	data := &ConditionalType{}
 	data.root = root
 	data.checkType = c.instantiateType(root.checkType, mapper)
 	data.extendsType = c.instantiateType(root.extendsType, mapper)
 	data.mapper = mapper
 	data.combinedMapper = combinedMapper
+	data.falseCombinedMapper = falseCombinedMapper
 	return c.newType(TypeFlagsConditional, ObjectFlagsNone, data)
 }
 
@@ -25986,7 +26030,7 @@ func (c *Checker) getIntersectionTypeEx(types []*Type, flags IntersectionFlags, 
 	if includes&TypeFlagsIncludesMissingType != 0 {
 		typeSet[slices.Index(typeSet, c.undefinedType)] = c.missingType
 	}
-	if core.Some(typeSet, isNegatedType) {
+	if flags&IntersectionFlagsNoConstraintReduction == 0 && core.Some(typeSet, isNegatedType) {
 		if c.checkForUnsatisfiedNegatedType(typeSet) {
 			return c.neverType
 		}
@@ -26538,6 +26582,8 @@ func (c *Checker) getIndexTypeEx(t *Type, indexFlags IndexFlags) *Type {
 	switch {
 	case c.isNoInferType(t):
 		return c.getNoInferType(c.getIndexTypeEx(t.AsSubstitutionType().baseType, indexFlags))
+	case t.flags&TypeFlagsNegated != 0:
+		return c.getIndexTypeForNegatedType(t, indexFlags)
 	case c.shouldDeferIndexType(t, indexFlags):
 		return c.getIndexTypeForGenericType(t, indexFlags)
 	case t.flags&TypeFlagsUnion != 0:
@@ -26556,6 +26602,32 @@ func (c *Checker) getIndexTypeEx(t *Type, indexFlags IndexFlags) *Type {
 	include := core.IfElse(indexFlags&IndexFlagsNoIndexSignatures != 0, TypeFlagsStringLiteral, TypeFlagsStringLike) |
 		core.IfElse(indexFlags&IndexFlagsStringsOnly != 0, TypeFlagsNone, TypeFlagsNumberLike|TypeFlagsESSymbolLike)
 	return c.getLiteralTypeFromProperties(t, include, indexFlags == IndexFlagsNone)
+}
+
+// getIndexTypeForNegatedType computes 'keyof not T'.
+//
+// `keyof not A` is difficult to reason about - `not A` could have any number of keys on its component types.
+// However there are certain cases, like `keyof not { x: unknown }` where you can safely conclude that the keyof
+// result should be `not "x" & (string | number | symbol)`, because the type negated effectively forbids the key.
+// But take `keyof not {x: any, y: string}` - we can't conclude anything about the keys of the negation here -
+// `{x: 12}` is in the negation because it's missing a `y` key, so the `keyof` cannot include `x`.
+// This indicates that the only time we can produce a negated result from a `keyof` is when we are taking a `keyof`
+// of a type with a _single_ field of type `any` or `unknown`. When we have more than a single known-any property,
+// a `keyof not Whatever` must therefore be `never`, much like `keyof {}`.
+func (c *Checker) getIndexTypeForNegatedType(t *Type, indexFlags IndexFlags) *Type {
+	baseType := t.AsNegatedType().baseType
+	rawUnnegated := c.getIndexTypeEx(baseType, indexFlags)
+	if rawUnnegated.flags&TypeFlagsIndex != 0 {
+		return c.getIndexTypeForGenericType(t, indexFlags)
+	}
+	if rawUnnegated.flags&TypeFlagsUnion == 0 && c.getIndexedAccessType(baseType, rawUnnegated).flags&TypeFlagsAnyOrUnknown != 0 {
+		keyofConstraint := c.stringNumberSymbolType
+		if indexFlags&IndexFlagsStringsOnly != 0 {
+			keyofConstraint = c.stringType
+		}
+		return c.getIntersectionType([]*Type{c.getNegatedType(rawUnnegated), keyofConstraint})
+	}
+	return c.neverType
 }
 
 func (c *Checker) getExtractStringType(t *Type) *Type {

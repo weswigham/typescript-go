@@ -1,0 +1,25 @@
+genericInferenceDefaultTypeParameterJsxReact.tsx(13,23): error TS2322: Type '{ onClick: (e: any) => any; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+  Property 'onClick' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+genericInferenceDefaultTypeParameterJsxReact.tsx(13,32): error TS7006: Parameter 'e' implicitly has an 'any' type.
+
+
+==== genericInferenceDefaultTypeParameterJsxReact.tsx (2 errors) ====
+    /// <reference path="/.lib/react16.d.ts" />
+    
+    // Repro from #50858
+    
+    import React, { ComponentPropsWithRef, ElementType, ReactNode } from 'react';
+    
+    type ButtonBaseProps<T extends ElementType> = ComponentPropsWithRef<T> & { children?: ReactNode };
+    
+    function Component<T extends ElementType = 'span'>(props: ButtonBaseProps<T>) {
+        return <></>;
+    }
+    
+    const v1 = <Component onClick={e => e.preventDefault()} />;
+                          ~~~~~~~
+!!! error TS2322: Type '{ onClick: (e: any) => any; }' is not assignable to type 'IntrinsicAttributes & { children?: ReactNode; }'.
+!!! error TS2322:   Property 'onClick' does not exist on type 'IntrinsicAttributes & { children?: ReactNode; }'.
+                                   ~
+!!! error TS7006: Parameter 'e' implicitly has an 'any' type.
+    

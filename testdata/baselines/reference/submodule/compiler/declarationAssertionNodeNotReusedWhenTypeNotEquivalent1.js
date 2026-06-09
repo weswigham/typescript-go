@@ -29,6 +29,10 @@ export const unwrapped = unwrap(value);
 
 
 //// [declarationAssertionNodeNotReusedWhenTypeNotEquivalent1.d.ts]
-export declare const unwrapped: {
-    prop1: "hello";
+type Wrapper<T> = {
+    _type: T;
 };
+export declare const unwrapped: {
+    prop1: not Record<string, Wrapper<any>> & "hello";
+};
+export {};

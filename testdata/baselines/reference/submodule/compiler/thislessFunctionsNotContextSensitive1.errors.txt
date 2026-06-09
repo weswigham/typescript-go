@@ -1,9 +1,15 @@
 thislessFunctionsNotContextSensitive1.ts(25,3): error TS2345: Argument of type 'false' is not assignable to parameter of type 'true'.
 thislessFunctionsNotContextSensitive1.ts(143,13): error TS2345: Argument of type '"value"' is not assignable to parameter of type 'never'.
+thislessFunctionsNotContextSensitive1.ts(144,13): error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'Iterable<any> & not string & string[]'.
+  Type 'string[]' is not assignable to type 'not string'.
+thislessFunctionsNotContextSensitive1.ts(145,13): error TS2345: Argument of type '{ foo(): void; }[]' is not assignable to parameter of type 'Iterable<any> & not string & { foo(): void; }[]'.
+  Type '{ foo(): void; }[]' is not assignable to type 'not string'.
+thislessFunctionsNotContextSensitive1.ts(146,13): error TS2345: Argument of type '{ foo(): void; }[]' is not assignable to parameter of type 'Iterable<any> & not string & { foo(): void; }[]'.
+  Type '{ foo(): void; }[]' is not assignable to type 'not string'.
 thislessFunctionsNotContextSensitive1.ts(176,3): error TS2820: Type '"$test6"' is not assignable to type 'ExtractFields<{ target: "$test6"; data1: { $test1: number; $test2: null; }; data2: { $test3: {}; $test4: () => void; $test5(): void; }; }> | undefined'. Did you mean '"$test1"'?
 
 
-==== thislessFunctionsNotContextSensitive1.ts (3 errors) ====
+==== thislessFunctionsNotContextSensitive1.ts (6 errors) ====
     // https://github.com/microsoft/TypeScript/issues/62204
     
     declare function TestConfig<const TConfig extends { a?: any; b?: any; c?: any }>(
@@ -152,8 +158,17 @@ thislessFunctionsNotContextSensitive1.ts(176,3): error TS2820: Type '"$test6"' i
                 ~~~~~~~
 !!! error TS2345: Argument of type '"value"' is not assignable to parameter of type 'never'.
     doSomething(['v']); // ok
+                ~~~~~
+!!! error TS2345: Argument of type 'string[]' is not assignable to parameter of type 'Iterable<any> & not string & string[]'.
+!!! error TS2345:   Type 'string[]' is not assignable to type 'not string'.
     doSomething([o]); // ok
+                ~~~
+!!! error TS2345: Argument of type '{ foo(): void; }[]' is not assignable to parameter of type 'Iterable<any> & not string & { foo(): void; }[]'.
+!!! error TS2345:   Type '{ foo(): void; }[]' is not assignable to type 'not string'.
     doSomething([{ foo() {} }]); // ok
+                ~~~~~~~~~~~~~~
+!!! error TS2345: Argument of type '{ foo(): void; }[]' is not assignable to parameter of type 'Iterable<any> & not string & { foo(): void; }[]'.
+!!! error TS2345:   Type '{ foo(): void; }[]' is not assignable to type 'not string'.
     
     // https://github.com/microsoft/TypeScript/issues/55124
     type Values<T> = T[keyof T];

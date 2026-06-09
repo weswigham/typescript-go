@@ -1,0 +1,11 @@
+--- old.types.asyncGenerators.es2018.2.types
++++ new.types.asyncGenerators.es2018.2.types
+@@= skipped -20, +20 lines =@@
+
+     yield* Promise.resolve([1, 2]);
+ >yield* Promise.resolve([1, 2]) : any
+->Promise.resolve([1, 2]) : Promise<number[]>
++>Promise.resolve([1, 2]) : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null & number[]>
+ >Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+ >Promise : PromiseConstructor
+ >resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }

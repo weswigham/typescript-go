@@ -1,0 +1,49 @@
+--- old.awaitedType.types
++++ new.awaitedType.types
+@@= skipped -13, +13 lines =@@
+ >T4 : T4
+
+ type T5 = Awaited<{ then: number }>;
+->T5 : { then: number; }
++>T5 : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null & { then: number; }
+ >then : number
+
+ type T6 = Awaited<{ then(): void }>; // never (non-promise "thenable")
+@@= skipped -13, +13 lines =@@
+ >x : number
+
+ type T8 = Awaited<{ then(x: () => void): void }>; // unknown
+->T8 : unknown
++>T8 : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null
+ >then : (x: () => void) => void
+ >x : () => void
+
+@@= skipped -11, +11 lines =@@
+ >T10 : never
+
+ type T11 = Awaited<unknown>;
+->T11 : unknown
++>T11 : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null
+
+ type T12 = Awaited<Promise<Promise<number>>>;
+ >T12 : number
+@@= skipped -70, +70 lines =@@
+ >bbb : string
+
+     [
+->[        aaa,        bbb,    ] = await Promise.all([        MaybePromise(1),        MaybePromise('2'),        MaybePromise(true),    ]) : [number, string, boolean]
++>[        aaa,        bbb,    ] = await Promise.all([        MaybePromise(1),        MaybePromise('2'),        MaybePromise(true),    ]) : [number, string, (not null & false) | (not null & true)]
+ >[        aaa,        bbb,    ] : [number, string]
+
+         aaa,
+@@= skipped -10, +10 lines =@@
+ >bbb : string
+
+     ] = await Promise.all([
+->await Promise.all([        MaybePromise(1),        MaybePromise('2'),        MaybePromise(true),    ]) : [number, string, boolean]
+->Promise.all([        MaybePromise(1),        MaybePromise('2'),        MaybePromise(true),    ]) : Promise<[number, string, boolean]>
++>await Promise.all([        MaybePromise(1),        MaybePromise('2'),        MaybePromise(true),    ]) : [number, string, (not null & false) | (not null & true)]
++>Promise.all([        MaybePromise(1),        MaybePromise('2'),        MaybePromise(true),    ]) : Promise<[number, string, (not null & false) | (not null & true)]>
+ >Promise.all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+ >Promise : PromiseConstructor
+ >all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }

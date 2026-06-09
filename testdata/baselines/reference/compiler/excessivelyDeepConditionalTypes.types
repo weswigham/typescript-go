@@ -47,5 +47,5 @@ interface Duck {
 }
 
 type DuckSpecies = GetByString<Duck, 'taxonomy.species'>; // 'platyrhynchos'
->DuckSpecies : "platyrhynchos"
+>DuckSpecies : { genus: 'anas'; species: 'platyrhynchos'; }["species" & not `${Key}.${Rest}` & not `${Key}[${Rest}` & not `${Key}]${Rest}` & not `${Rest_1}.` & not `${Rest_1}[` & not `${Rest_1}]` & not `.${Rest_2}` & not `[${Rest_2}` & not `]${Rest_2}`]
 

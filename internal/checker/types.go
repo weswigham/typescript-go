@@ -446,10 +446,10 @@ const (
 	TypeFlagsConditional     TypeFlags = 1 << 26 // T extends U ? X : Y
 	TypeFlagsUnion           TypeFlags = 1 << 27 // Union (T | U)
 	TypeFlagsIntersection    TypeFlags = 1 << 28 // Intersection (T & U)
-	TypeFlagsReserved1       TypeFlags = 1 << 29 // Used by union/intersection type construction
-	TypeFlagsReserved2       TypeFlags = 1 << 30 // Used by union/intersection type construction
-	TypeFlagsReserved3       TypeFlags = 1 << 31
-	TypeFlagsNegated         TypeFlags = 1 << 32 // not T
+	TypeFlagsNegated         TypeFlags = 1 << 29 // not T
+	TypeFlagsReserved1       TypeFlags = 1 << 30 // Used by union/intersection type construction
+	TypeFlagsReserved2       TypeFlags = 1 << 31 // Used by union/intersection type construction
+	TypeFlagsReserved3       TypeFlags = 1 << 32
 
 	TypeFlagsAnyOrUnknown                  = TypeFlagsAny | TypeFlagsUnknown
 	TypeFlagsNullable                      = TypeFlagsUndefined | TypeFlagsNull
@@ -1235,10 +1235,12 @@ type ConditionalType struct {
 	resolvedTrueType                 *Type
 	resolvedFalseType                *Type
 	resolvedInferredTrueType         *Type // The `trueType` instantiated with the `combinedMapper`, if present
+	resolvedInferredFalseType        *Type // The `falseType` instantiated with the `falseCombinedMapper`, if present
 	resolvedDefaultConstraint        *Type
 	resolvedConstraintOfDistributive *Type
 	mapper                           *TypeMapper
 	combinedMapper                   *TypeMapper
+	falseCombinedMapper              *TypeMapper
 }
 
 func (t *ConditionalType) CheckType() *Type   { return t.checkType }

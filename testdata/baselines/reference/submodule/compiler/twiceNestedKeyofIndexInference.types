@@ -68,7 +68,7 @@ const state: State = {
 
 const newState: State = set(state, ["a", 'b'], 'why'); // shouldn't be an error
 >newState : State
->set(state, ["a", 'b'], 'why') : Pick<State, "d"> & Required<{ a: Pick<{ b: string; c: number; }, "c"> & Required<Pick<{ b: string; c: number; }, "b">>; }>
+>set(state, ["a", 'b'], 'why') : Pick<not any[] & State, "d"> & Required<{ a: Pick<not any[] & { b: string; c: number; }, "c"> & Required<Pick<not any[] & { b: string; c: number; }, "b">>; }>
 >set : { <T, K1 extends keyof T>(source: T, path: [K1], value: T[K1]): Set1<T, K1>; <T, K1 extends keyof T, K2 extends keyof T[K1]>(source: T, path: [K1, K2], value: T[K1][K2]): Set2<T, K1, K2>; }
 >state : State
 >["a", 'b'] : ["a", "b"]

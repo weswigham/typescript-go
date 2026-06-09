@@ -1,0 +1,25 @@
+--- old.recursiveConditionalEvaluationNonInfinite.types
++++ new.recursiveConditionalEvaluationNonInfinite.types
+@@= skipped -6, +6 lines =@@
+ >notArray : T
+
+ declare const x: Test<number[]>;
+->x : { array: { notArray: number; }; }
++>x : { array: { notArray: not any[] & number; }; }
+
+ const y: { array: { notArray: number } } = x; // Error
+ >y : { array: { notArray: number; }; }
+ >array : { notArray: number; }
+ >notArray : number
+->x : { array: { notArray: number; }; }
++>x : { array: { notArray: not any[] & number; }; }
+
+ declare const a: Test<number>;
+->a : { notArray: number; }
++>a : { notArray: not any[] & number; }
+
+ const b: { notArray: number } = a; // Works
+ >b : { notArray: number; }
+ >notArray : number
+->a : { notArray: number; }
++>a : { notArray: not any[] & number; }

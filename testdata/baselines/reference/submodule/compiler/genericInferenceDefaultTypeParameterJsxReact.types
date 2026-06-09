@@ -27,11 +27,11 @@ const v1 = <Component onClick={e => e.preventDefault()} />;
 >v1 : JSX.Element
 ><Component onClick={e => e.preventDefault()} /> : JSX.Element
 >Component : <T extends ElementType = "span">(props: ButtonBaseProps<T>) => JSX.Element
->onClick : (e: React.MouseEvent<HTMLSpanElement>) => void
->e => e.preventDefault() : (e: React.MouseEvent<HTMLSpanElement>) => void
->e : React.MouseEvent<HTMLSpanElement>
->e.preventDefault() : void
->e.preventDefault : () => void
->e : React.MouseEvent<HTMLSpanElement>
->preventDefault : () => void
+>onClick : (e: any) => any
+>e => e.preventDefault() : (e: any) => any
+>e : any
+>e.preventDefault() : any
+>e.preventDefault : any
+>e : any
+>preventDefault : any
 

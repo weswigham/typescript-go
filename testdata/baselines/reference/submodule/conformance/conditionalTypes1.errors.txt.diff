@@ -1,0 +1,58 @@
+--- old.conditionalTypes1.errors.txt
++++ new.conditionalTypes1.errors.txt
+@@= skipped -61, +61 lines =@@
+ conditionalTypes1.ts(134,10): error TS2540: Cannot assign to 'id' because it is a read-only property.
+ conditionalTypes1.ts(135,5): error TS2542: Index signature in type 'DeepReadonlyArray<Part>' only permits reading.
+ conditionalTypes1.ts(136,22): error TS2540: Cannot assign to 'id' because it is a read-only property.
+-conditionalTypes1.ts(137,10): error TS2339: Property 'updatePart' does not exist on type 'DeepReadonlyObject<Part>'.
++conditionalTypes1.ts(137,10): error TS2339: Property 'updatePart' does not exist on type 'DeepReadonlyObject<object & not any[] & Part>'.
+ conditionalTypes1.ts(159,5): error TS2322: Type 'ZeroOf<T>' is not assignable to type 'T'.
+   'ZeroOf<T>' is assignable to the constraint of type 'T', but 'T' could be instantiated with a different subtype of constraint 'string | number'.
+     Type 'string | number' is not assignable to type 'T'.
+@@= skipped -15, +15 lines =@@
+   Type 'number | boolean' is not assignable to type 'T94<U>'.
+     Type 'number' is not assignable to type 'T94<U>'.
+       Type 'boolean' is not assignable to type 'true'.
+-
+-
+-==== conditionalTypes1.ts (20 errors) ====
++conditionalTypes1.ts(352,12): error TS2322: Type 'number' is not assignable to type 'not any[] & number'.
++  Type 'number' is not assignable to type 'not any[]'.
++conditionalTypes1.ts(352,26): error TS2322: Type 'number' is not assignable to type 'not any[] & number'.
++  Type 'number' is not assignable to type 'not any[]'.
++conditionalTypes1.ts(352,32): error TS2322: Type 'string' is not assignable to type 'not any[] & string'.
++  Type 'string' is not assignable to type 'not any[]'.
++
++
++==== conditionalTypes1.ts (23 errors) ====
+     type T00 = Exclude<"a" | "b" | "c" | "d", "a" | "c" | "f">;  // "b" | "d"
+     type T01 = Extract<"a" | "b" | "c" | "d", "a" | "c" | "f">;  // "a" | "c"
+     
+@@= skipped -222, +228 lines =@@
+ !!! error TS2540: Cannot assign to 'id' because it is a read-only property.
+         part.updatePart("hello");  // Error
+              ~~~~~~~~~~
+-!!! error TS2339: Property 'updatePart' does not exist on type 'DeepReadonlyObject<Part>'.
++!!! error TS2339: Property 'updatePart' does not exist on type 'DeepReadonlyObject<object & not any[] & Part>'.
+     }
+     
+     type ZeroOf<T extends number | string | boolean> = T extends number ? 0 : T extends string ? "" : false;
+@@= skipped -235, +235 lines =@@
+     
+     var a = {o: 1, b: 2, c: [{a: 1, c: '213'}]}
+     assign(a, {o: 2, c: {0: {a: 2, c: '213123'}}})
++               ~
++!!! error TS2322: Type 'number' is not assignable to type 'not any[] & number'.
++!!! error TS2322:   Type 'number' is not assignable to type 'not any[]'.
++!!! related TS6500 conditionalTypes1.ts:351:10: The expected type comes from property 'o' which is declared here on type 'RecursivePartial<{ o: number; b: number; c: { a: number; c: string; }[]; }>'
++                             ~
++!!! error TS2322: Type 'number' is not assignable to type 'not any[] & number'.
++!!! error TS2322:   Type 'number' is not assignable to type 'not any[]'.
++!!! related TS6500 conditionalTypes1.ts:351:27: The expected type comes from property 'a' which is declared here on type 'RecursivePartial<{ a: number; c: string; }>'
++                                   ~
++!!! error TS2322: Type 'string' is not assignable to type 'not any[] & string'.
++!!! error TS2322:   Type 'string' is not assignable to type 'not any[]'.
++!!! related TS6500 conditionalTypes1.ts:351:33: The expected type comes from property 'c' which is declared here on type 'RecursivePartial<{ a: number; c: string; }>'
+     
+     // Repros from #23843
+     

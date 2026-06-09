@@ -1,0 +1,46 @@
+--- old.asyncGeneratorPromiseNextType.types
++++ new.asyncGeneratorPromiseNextType.types
+@@= skipped -33, +33 lines =@@
+
+         else {
+             const results = await Promise.all(pending);
+->results : Result[]
+->await Promise.all(pending) : Result[]
+->Promise.all(pending) : Promise<Result[]>
++>results : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]
++>await Promise.all(pending) : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]
++>Promise.all(pending) : Promise<(not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]>
+ >Promise.all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+ >Promise : PromiseConstructor
+ >all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+@@= skipped -24, +24 lines =@@
+ >await storeResults(results) : void
+ >storeResults(results) : Promise<void>
+ >storeResults : (results: Result[]) => Promise<void>
+->results : Result[]
++>results : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]
+         }
+     }
+ }
+@@= skipped -50, +50 lines =@@
+
+         else {
+             const results = await Promise.all(pending);
+->results : Result[]
+->await Promise.all(pending) : Result[]
+->Promise.all(pending) : Promise<Result[]>
++>results : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]
++>await Promise.all(pending) : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]
++>Promise.all(pending) : Promise<(not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]>
+ >Promise.all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+ >Promise : PromiseConstructor
+ >all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+@@= skipped -24, +24 lines =@@
+ >await storeResults(results) : void
+ >storeResults(results) : Promise<void>
+ >storeResults : (results: Result[]) => Promise<void>
+->results : Result[]
++>results : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Result)[]
+         }
+     }
+ }

@@ -1,0 +1,14 @@
+--- old.declarationAssertionNodeNotReusedWhenTypeNotEquivalent1.js
++++ new.declarationAssertionNodeNotReusedWhenTypeNotEquivalent1.js
+@@= skipped -28, +28 lines =@@
+
+
+ //// [declarationAssertionNodeNotReusedWhenTypeNotEquivalent1.d.ts]
++type Wrapper<T> = {
++    _type: T;
++};
+ export declare const unwrapped: {
+-    prop1: "hello";
++    prop1: not Record<string, Wrapper<any>> & "hello";
+ };
++export {};

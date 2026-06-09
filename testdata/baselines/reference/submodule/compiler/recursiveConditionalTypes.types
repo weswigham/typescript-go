@@ -23,7 +23,7 @@ type InfinitePromise<T> = Promise<InfinitePromise<T>>;
 >InfinitePromise : InfinitePromise<T>
 
 type P0 = __Awaited<Promise<string | Promise<MyPromise<number> | null> | undefined>>;
->P0 : string | number | null | undefined
+>P0 : (not PromiseLike<unknown> & string) | (not PromiseLike<unknown> & number) | null | undefined
 
 type P1 = __Awaited<any>;
 >P1 : any
@@ -71,7 +71,7 @@ type InfiniteArray<T> = InfiniteArray<T>[];
 >InfiniteArray : InfiniteArray<T>
 
 type B0 = Flatten<string[][][]>;
->B0 : string[]
+>B0 : (not readonly unknown[] & string)[]
 
 type B1 = Flatten<string[][] | readonly (number[] | boolean[][])[]>;
 >B1 : B1

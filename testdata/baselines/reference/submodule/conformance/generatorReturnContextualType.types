@@ -48,7 +48,7 @@ async function* f3(): AsyncGenerator<any, { x: 'x' }, any> {
 >x : "x"
 
   return Promise.resolve({ x: 'x' });
->Promise.resolve({ x: 'x' }) : Promise<{ x: "x"; }>
+>Promise.resolve({ x: 'x' }) : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & { x: "x"; }>
 >Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
 >Promise : PromiseConstructor
 >resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
@@ -62,7 +62,7 @@ async function* g3(): AsyncIterator<any, { x: 'x' }, any> {
 >x : "x"
 
   return Promise.resolve({ x: 'x' });
->Promise.resolve({ x: 'x' }) : Promise<{ x: "x"; }>
+>Promise.resolve({ x: 'x' }) : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & { x: "x"; }>
 >Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
 >Promise : PromiseConstructor
 >resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
@@ -82,7 +82,7 @@ async function* f4(): AsyncGenerator<any, { x: 'x' }, any> {
 >'x' : "x"
 
   return Promise.resolve(ret); // Error
->Promise.resolve(ret) : Promise<{ x: string; }>
+>Promise.resolve(ret) : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & { x: string; }>
 >Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
 >Promise : PromiseConstructor
 >resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
@@ -100,7 +100,7 @@ async function* g4(): AsyncIterator<any, { x: 'x' }, any> {
 >'x' : "x"
 
   return Promise.resolve(ret); // Error
->Promise.resolve(ret) : Promise<{ x: string; }>
+>Promise.resolve(ret) : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & { x: string; }>
 >Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
 >Promise : PromiseConstructor
 >resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }

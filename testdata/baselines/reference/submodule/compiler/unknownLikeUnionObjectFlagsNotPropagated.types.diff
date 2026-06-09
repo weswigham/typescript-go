@@ -1,0 +1,37 @@
+--- old.unknownLikeUnionObjectFlagsNotPropagated.types
++++ new.unknownLikeUnionObjectFlagsNotPropagated.types
+@@= skipped -21, +21 lines =@@
+ >myUnusedFunction : () => Promise<void>
+
+     const fetch1 = Promise.resolve(['hello', 'world']);
+->fetch1 : Promise<string[]>
+->Promise.resolve(['hello', 'world']) : Promise<string[]>
++>fetch1 : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]>
++>Promise.resolve(['hello', 'world']) : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]>
+ >Promise.resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+ >Promise : PromiseConstructor
+ >resolve : { (): Promise<void>; <T>(value: T): Promise<Awaited<T>>; <T>(value: T | PromiseLike<T>): Promise<Awaited<T>>; }
+@@= skipped -10, +10 lines =@@
+ >'world' : "world"
+
+     const [data1] = await Promise.all([fetch1]);
+->data1 : string[]
+->await Promise.all([fetch1]) : [string[]]
+->Promise.all([fetch1]) : Promise<[string[]]>
++>data1 : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]
++>await Promise.all([fetch1]) : [not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]]
++>Promise.all([fetch1]) : Promise<[not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]]>
+ >Promise.all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+ >Promise : PromiseConstructor
+ >all : { <T>(values: Iterable<T | PromiseLike<T>>): Promise<Awaited<T>[]>; <T extends readonly unknown[] | []>(values: T): Promise<{ -readonly [P in keyof T]: Awaited<T[P]>; }>; }
+->[fetch1] : [Promise<string[]>]
+->fetch1 : Promise<string[]>
++>[fetch1] : [Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]>]
++>fetch1 : Promise<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]>
+
+     data1.length;
+ >data1.length : number
+->data1 : string[]
++>data1 : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & string[]
+ >length : number
+ }

@@ -1,0 +1,114 @@
+--- old.conditionalTypes1.types
++++ new.conditionalTypes1.types
+@@= skipped -109, +109 lines =@@
+ >c : boolean
+
+ type T10 = Exclude<Options, { k: "a" | "b" }>;  // { k: "c", c: boolean }
+->T10 : { k: "c"; c: boolean; }
++>T10 : not { k: "a" | "b"; } & { k: "c"; c: boolean; }
+ >k : "a" | "b"
+
+ type T11 = Extract<Options, { k: "a" | "b" }>;  // { k: "a", a: number } | { k: "b", b: string }
+@@= skipped -8, +8 lines =@@
+ >k : "a" | "b"
+
+ type T12 = Exclude<Options, { k: "a" } | { k: "b" }>;  // { k: "c", c: boolean }
+->T12 : { k: "c"; c: boolean; }
++>T12 : not { k: "a"; } & not { k: "b"; } & { k: "c"; c: boolean; }
+ >k : "a"
+ >k : "b"
+
+@@= skipped -218, +218 lines =@@
+
+ function f10(part: DeepReadonly<Part>) {
+ >f10 : (part: DeepReadonly<Part>) => void
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+
+     let name: string = part.name;
+ >name : string
+->part.name : string
+->part : DeepReadonlyObject<Part>
+->name : string
++>part.name : not any[] & string
++>part : DeepReadonlyObject<object & not any[] & Part>
++>name : not any[] & string
+
+     let id: number = part.subparts[0].id;
+ >id : number
+->part.subparts[0].id : number
+->part.subparts[0] : DeepReadonlyObject<Part>
++>part.subparts[0].id : not any[] & number
++>part.subparts[0] : DeepReadonlyObject<object & not any[] & Part>
+ >part.subparts : DeepReadonlyArray<Part>
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >subparts : DeepReadonlyArray<Part>
+ >0 : 0
+->id : number
++>id : not any[] & number
+
+     part.id = part.id;  // Error
+->part.id = part.id : number
++>part.id = part.id : not any[] & number
+ >part.id : any
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >id : any
+->part.id : number
+->part : DeepReadonlyObject<Part>
+->id : number
++>part.id : not any[] & number
++>part : DeepReadonlyObject<object & not any[] & Part>
++>id : not any[] & number
+
+     part.subparts[0] = part.subparts[0];  // Error
+->part.subparts[0] = part.subparts[0] : DeepReadonlyObject<Part>
+->part.subparts[0] : DeepReadonlyObject<Part>
++>part.subparts[0] = part.subparts[0] : DeepReadonlyObject<object & not any[] & Part>
++>part.subparts[0] : DeepReadonlyObject<object & not any[] & Part>
+ >part.subparts : DeepReadonlyArray<Part>
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >subparts : DeepReadonlyArray<Part>
+ >0 : 0
+->part.subparts[0] : DeepReadonlyObject<Part>
++>part.subparts[0] : DeepReadonlyObject<object & not any[] & Part>
+ >part.subparts : DeepReadonlyArray<Part>
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >subparts : DeepReadonlyArray<Part>
+ >0 : 0
+
+     part.subparts[0].id = part.subparts[0].id;  // Error
+->part.subparts[0].id = part.subparts[0].id : number
++>part.subparts[0].id = part.subparts[0].id : not any[] & number
+ >part.subparts[0].id : any
+->part.subparts[0] : DeepReadonlyObject<Part>
++>part.subparts[0] : DeepReadonlyObject<object & not any[] & Part>
+ >part.subparts : DeepReadonlyArray<Part>
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >subparts : DeepReadonlyArray<Part>
+ >0 : 0
+ >id : any
+->part.subparts[0].id : number
+->part.subparts[0] : DeepReadonlyObject<Part>
++>part.subparts[0].id : not any[] & number
++>part.subparts[0] : DeepReadonlyObject<object & not any[] & Part>
+ >part.subparts : DeepReadonlyArray<Part>
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >subparts : DeepReadonlyArray<Part>
+ >0 : 0
+->id : number
++>id : not any[] & number
+
+     part.updatePart("hello");  // Error
+ >part.updatePart("hello") : any
+ >part.updatePart : any
+->part : DeepReadonlyObject<Part>
++>part : DeepReadonlyObject<object & not any[] & Part>
+ >updatePart : any
+ >"hello" : "hello"
+ }

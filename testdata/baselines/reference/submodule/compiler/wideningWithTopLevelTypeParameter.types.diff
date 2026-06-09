@@ -1,0 +1,23 @@
+--- old.wideningWithTopLevelTypeParameter.types
++++ new.wideningWithTopLevelTypeParameter.types
+@@= skipped -72, +72 lines =@@
+ }
+
+ const a = new FormControl('');  // string
+->a : FormControl<string>
+->new FormControl('') : FormControl<string>
++>a : FormControl<"">
++>new FormControl('') : FormControl<"">
+ >FormControl : typeof FormControl
+ >'' : ""
+
+@@= skipped -26, +26 lines =@@
+ }
+
+ const c = new FormControl3('');  // string
+->c : FormControl3<string>
+->new FormControl3('') : FormControl3<string>
++>c : FormControl3<"">
++>new FormControl3('') : FormControl3<"">
+ >FormControl3 : typeof FormControl3
+ >'' : ""

@@ -1,0 +1,27 @@
+--- old.overloadedConstructorFixesInferencesAppropriately.types
++++ new.overloadedConstructorFixesInferencesAppropriately.types
+@@= skipped -46, +46 lines =@@
+ new AsyncLoader({
+ >new AsyncLoader({    asyncLoad: load,    children: result => result.success as any,}) : AsyncLoader<ErrorResult | { success: true; }>
+ >AsyncLoader : typeof AsyncLoader
+->{    asyncLoad: load,    children: result => result.success as any,} : { asyncLoad: () => Box<{ success: true; } | ErrorResult>; children: (result: { success: true; }) => any; }
++>{    asyncLoad: load,    children: result => result.success as any,} : { asyncLoad: () => Box<{ success: true; } | ErrorResult>; children: (result: not ErrorResult & { success: true; }) => any; }
+
+     asyncLoad: load,
+ >asyncLoad : () => Box<{ success: true; } | ErrorResult>
+ >load : () => Box<{ success: true; } | ErrorResult>
+
+     children: result => result.success as any,
+->children : (result: { success: true; }) => any
+->result => result.success as any : (result: { success: true; }) => any
+->result : { success: true; }
++>children : (result: not ErrorResult & { success: true; }) => any
++>result => result.success as any : (result: not ErrorResult & { success: true; }) => any
++>result : not ErrorResult & { success: true; }
+ >result.success as any : any
+ >result.success : true
+->result : { success: true; }
++>result : not ErrorResult & { success: true; }
+ >success : true
+
+ }); // should work fine

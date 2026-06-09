@@ -47,8 +47,8 @@ declare function unwrap<T>(wrapper: T): Unwrap<T>;
 >wrapper : T
 
 export const unwrapped = unwrap(value);
->unwrapped : { prop1: "hello"; }
->unwrap(value) : { prop1: "hello"; }
+>unwrapped : { prop1: not Record<string, Wrapper<any>> & "hello"; }
+>unwrap(value) : { prop1: not Record<string, Wrapper<any>> & "hello"; }
 >unwrap : <T>(wrapper: T) => Unwrap<T>
 >value : Wrapper<{ prop1: Wrapper<"hello">; }>
 

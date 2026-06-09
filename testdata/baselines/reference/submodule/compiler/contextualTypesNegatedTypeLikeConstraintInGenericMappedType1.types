@@ -78,20 +78,20 @@ declare let TabGroup: _internal_ComponentTabGroup;
 TabGroup({
 >TabGroup({  defaultIndex: 0,  onChange: (index) => {    const i: number = index;  },}) : null
 >TabGroup : _internal_ComponentTabGroup
->{  defaultIndex: 0,  onChange: (index) => {    const i: number = index;  },} : { defaultIndex: number; onChange: (index: number) => void; }
+>{  defaultIndex: 0,  onChange: (index) => {    const i: number = index;  },} : { defaultIndex: number; onChange: (index: number | Event) => void; }
 
   defaultIndex: 0,
 >defaultIndex : number
 >0 : 0
 
   onChange: (index) => {
->onChange : (index: number) => void
->(index) => {    const i: number = index;  } : (index: number) => void
->index : number
+>onChange : (index: number | Event) => void
+>(index) => {    const i: number = index;  } : (index: number | Event) => void
+>index : number | Event
 
     const i: number = index;
 >i : number
->index : number
+>index : number | Event
 
   },
 });

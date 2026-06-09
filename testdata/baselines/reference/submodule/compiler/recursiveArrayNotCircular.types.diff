@@ -1,0 +1,14 @@
+--- old.recursiveArrayNotCircular.types
++++ new.recursiveArrayNotCircular.types
+@@= skipped -100, +100 lines =@@
+             action.payload.map(reducer);
+ >action.payload.map(reducer) : void[]
+ >action.payload.map : <U>(callbackfn: (value: ReducerAction, index: number, array: ReducerAction[]) => U, thisArg?: any) => U[]
+->action.payload : ReducerAction[]
+->action : { type: ActionType.Batch; payload: ReducerAction[]; }
+->payload : ReducerAction[]
++>action.payload : not void & ReducerAction[]
++>action : { type: ActionType.Batch; payload: not void & ReducerAction[]; }
++>payload : not void & ReducerAction[]
+ >map : <U>(callbackfn: (value: ReducerAction, index: number, array: ReducerAction[]) => U, thisArg?: any) => U[]
+ >reducer : (action: ReducerAction) => void

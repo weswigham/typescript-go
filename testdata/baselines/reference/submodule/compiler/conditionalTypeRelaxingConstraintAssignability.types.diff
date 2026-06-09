@@ -1,0 +1,11 @@
+--- old.conditionalTypeRelaxingConstraintAssignability.types
++++ new.conditionalTypeRelaxingConstraintAssignability.types
+@@= skipped -84, +84 lines =@@
+ >p2 : Partial<I>
+
+   return f(p1, p2);
+->f(p1, p2) : I
++>f(p1, p2) : Partial<I>
+ >f : <T>(t: T, partial: DeepPartial<T>) => T
+ >p1 : I
+ >p2 : Partial<I>

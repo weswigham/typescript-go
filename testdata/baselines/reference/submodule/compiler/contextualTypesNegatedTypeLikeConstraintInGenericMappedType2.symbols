@@ -63,9 +63,7 @@ matcher({
   A: (_) => _.a,
 >A : Symbol(A, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 15, 9))
 >_ : Symbol(_, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 16, 6))
->_.a : Symbol(a, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 12, 25))
 >_ : Symbol(_, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 16, 6))
->a : Symbol(a, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 12, 25))
 
   B: (_) => "fail",
 >B : Symbol(B, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 16, 16))
@@ -79,9 +77,7 @@ matcher({
   A: (_) => _.a,
 >A : Symbol(A, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 20, 9))
 >_ : Symbol(_, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 21, 6))
->_.a : Symbol(a, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 12, 25))
 >_ : Symbol(_, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 21, 6))
->a : Symbol(a, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 12, 25))
 
   B: (_) => "fail",
 >B : Symbol(B, Decl(contextualTypesNegatedTypeLikeConstraintInGenericMappedType2.ts, 21, 16))

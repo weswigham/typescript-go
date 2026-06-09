@@ -1,0 +1,49 @@
+conditionalTypeRelaxingConstraintAssignability.ts(35,3): error TS2322: Type 'Partial<I>' is not assignable to type 'I'.
+  Types of property 'a' are incompatible.
+    Type 'string | undefined' is not assignable to type 'string'.
+      Type 'undefined' is not assignable to type 'string'.
+
+
+==== conditionalTypeRelaxingConstraintAssignability.ts (1 errors) ====
+    export type ElChildren =
+      | ElChildren.Void
+      | ElChildren.Text;
+    export namespace ElChildren {
+      export type Void = undefined;
+      export type Text = string;
+    }
+    
+    type Relax<C extends ElChildren> = C extends ElChildren.Text ? ElChildren.Text : C;
+    
+    export class Elem<
+      C extends ElChildren,
+      > {
+      constructor(
+        private children_: Relax<C>,
+      ) {
+      }
+    }
+    
+    new Elem(undefined as ElChildren.Void);
+    new Elem('' as ElChildren.Text);
+    new Elem('' as ElChildren.Void | ElChildren.Text); // error
+    new Elem('' as ElChildren); // error
+    
+    // Repro from #31766
+    
+    interface I { a: string }
+    
+    type DeepPartial<T> =
+        T extends object ? {[K in keyof T]?: DeepPartial<T[K]>} : T;
+    
+    declare function f<T>(t: T, partial: DeepPartial<T>): T;
+    
+    function g(p1: I, p2: Partial<I>): I {
+      return f(p1, p2);
+      ~~~~~~
+!!! error TS2322: Type 'Partial<I>' is not assignable to type 'I'.
+!!! error TS2322:   Types of property 'a' are incompatible.
+!!! error TS2322:     Type 'string | undefined' is not assignable to type 'string'.
+!!! error TS2322:       Type 'undefined' is not assignable to type 'string'.
+    }
+    

@@ -271,9 +271,9 @@ const badArray = await Array.fromAsync(badIterable);
 >badIterable : { [Symbol.iterator](): never; }
 
 const withIndexResult = await Array.fromAsync(["a", "b"], (str, index) => ({ index, str }));
->withIndexResult : { index: number; str: string; }[]
->await Array.fromAsync(["a", "b"], (str, index) => ({ index, str })) : { index: number; str: string; }[]
->Array.fromAsync(["a", "b"], (str, index) => ({ index, str })) : Promise<{ index: number; str: string; }[]>
+>withIndexResult : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null & { index: number; str: string; })[]
+>await Array.fromAsync(["a", "b"], (str, index) => ({ index, str })) : (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null & { index: number; str: string; })[]
+>Array.fromAsync(["a", "b"], (str, index) => ({ index, str })) : Promise<(not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not null & { index: number; str: string; })[]>
 >Array.fromAsync : { <T>(iterableOrArrayLike: AsyncIterable<T> | Iterable<T | PromiseLike<T>> | ArrayLike<T | PromiseLike<T>>): Promise<T[]>; <T, U>(iterableOrArrayLike: AsyncIterable<T> | Iterable<T> | ArrayLike<T>, mapFn: (value: Awaited<T>, index: number) => U, thisArg?: any): Promise<Awaited<U>[]>; }
 >Array : ArrayConstructor
 >fromAsync : { <T>(iterableOrArrayLike: AsyncIterable<T> | Iterable<T | PromiseLike<T>> | ArrayLike<T | PromiseLike<T>>): Promise<T[]>; <T, U>(iterableOrArrayLike: AsyncIterable<T> | Iterable<T> | ArrayLike<T>, mapFn: (value: Awaited<T>, index: number) => U, thisArg?: any): Promise<Awaited<U>[]>; }

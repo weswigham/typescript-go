@@ -1,6 +1,19 @@
 --- old.recursiveConditionalCrash3.types
 +++ new.recursiveConditionalCrash3.types
-@@= skipped -174, +174 lines =@@
+@@= skipped -155, +155 lines =@@
+  * These two functions work as charm, also they are superfast and as expected they don't use additional Memory
+  */
+ let y1: Expand<X>
+->y1 : { id: string; name: string; user: string; role: string; roles: string; }
++>y1 : { id: not U[] & not CanBeExpanded<object, string> & string; name: not U[] & not CanBeExpanded<object, string> & string; user: not U[] & not CanBeExpanded<object, string> & string; role: not U[] & not CanBeExpanded<object, string> & string; roles: not U[] & not CanBeExpanded<object, string> & string; }
+
+ let y2: Expand<X, 'user.role.user.role'>
+->y2 : { id: string; name: string; user: { id: string; role: { id: string; user: { id: string; role: string; note: string; }; x: string; }; note: string; }; role: string; roles: string; }
++>y2 : { id: not U[] & not CanBeExpanded<object, string> & string; name: not U[] & not CanBeExpanded<object, string> & string; user: { id: not U[] & not CanBeExpanded<object, string> & string; role: { id: not U[] & not CanBeExpanded<object, string> & string; user: { id: not CanBeExpanded<object, string> & string; role: string; note: not CanBeExpanded<object, string> & string; }; x: not U[] & not CanBeExpanded<object, string> & string; }; note: not U[] & not CanBeExpanded<object, string> & string; }; role: not U[] & not CanBeExpanded<object, string> & string; roles: not U[] & not CanBeExpanded<object, string> & string; }
+
+
+ /**
+@@= skipped -19, +19 lines =@@
   */
 
  type UseQueryOptions<T extends Base, K extends AllKeys<T, 4> > = Expand<T, K>
@@ -13,3 +26,9 @@
 
  type UseQueryOptions3<T , K  > = Expand_<T, K> extends infer O ? O : never
  >UseQueryOptions3 : UseQueryOptions3<T, K>
+@@= skipped -22, +22 lines =@@
+  *
+  */
+ let t: UseQueryOptions<X, 'role.user.role'>
+->t : { id: string; name: string; user: string; role: { id: string; user: { id: string; role: { id: string; user: string; x: string; }; note: string; }; x: string; }; roles: string; }
++>t : { id: not U[] & not CanBeExpanded<object, string> & string; name: not U[] & not CanBeExpanded<object, string> & string; user: not U[] & not CanBeExpanded<object, string> & string; role: { id: not U[] & not CanBeExpanded<object, string> & string; user: { id: not U[] & not CanBeExpanded<object, string> & string; role: { id: not CanBeExpanded<object, string> & string; user: string; x: not CanBeExpanded<object, string> & string; }; note: not U[] & not CanBeExpanded<object, string> & string; }; x: not U[] & not CanBeExpanded<object, string> & string; }; roles: not U[] & not CanBeExpanded<object, string> & string; }

@@ -1,5 +1,5 @@
-doNotElaborateAssignabilityToTypeParameters.ts(3,3): error TS2322: Type 'Yadda | Awaited<T>' is not assignable to type 'T'.
-  'T' could be instantiated with an arbitrary type which could be unrelated to 'Yadda | Awaited<T>'.
+doNotElaborateAssignabilityToTypeParameters.ts(3,3): error TS2322: Type 'Awaited<T> | (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Yadda)' is not assignable to type 'T'.
+  'T' could be instantiated with an arbitrary type which could be unrelated to 'Awaited<T> | (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Yadda)'.
 
 
 ==== doNotElaborateAssignabilityToTypeParameters.ts (1 errors) ====
@@ -7,8 +7,8 @@ doNotElaborateAssignabilityToTypeParameters.ts(3,3): error TS2322: Type 'Yadda |
       let yaddable = await getXOrYadda(x);
       return yaddable;
       ~~~~~~
-!!! error TS2322: Type 'Yadda | Awaited<T>' is not assignable to type 'T'.
-!!! error TS2322:   'T' could be instantiated with an arbitrary type which could be unrelated to 'Yadda | Awaited<T>'.
+!!! error TS2322: Type 'Awaited<T> | (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Yadda)' is not assignable to type 'T'.
+!!! error TS2322:   'T' could be instantiated with an arbitrary type which could be unrelated to 'Awaited<T> | (not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & Yadda)'.
     }
     
     interface Yadda {

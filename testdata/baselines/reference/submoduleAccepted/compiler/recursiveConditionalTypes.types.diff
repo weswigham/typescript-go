@@ -1,6 +1,24 @@
 --- old.recursiveConditionalTypes.types
 +++ new.recursiveConditionalTypes.types
-@@= skipped -379, +379 lines =@@
+@@= skipped -22, +22 lines =@@
+ >InfinitePromise : InfinitePromise<T>
+
+ type P0 = __Awaited<Promise<string | Promise<MyPromise<number> | null> | undefined>>;
+->P0 : string | number | null | undefined
++>P0 : (not PromiseLike<unknown> & string) | (not PromiseLike<unknown> & number) | null | undefined
+
+ type P1 = __Awaited<any>;
+ >P1 : any
+@@= skipped -48, +48 lines =@@
+ >InfiniteArray : InfiniteArray<T>
+
+ type B0 = Flatten<string[][][]>;
+->B0 : string[]
++>B0 : (not readonly unknown[] & string)[]
+
+ type B1 = Flatten<string[][] | readonly (number[] | boolean[][])[]>;
+ >B1 : B1
+@@= skipped -309, +309 lines =@@
      : never;
 
  function foo2<T extends unknown[]>(value: T): Enumerate<T['length']> {

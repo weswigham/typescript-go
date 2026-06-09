@@ -1,0 +1,16 @@
+--- old.checkJsxSubtleSkipContextSensitiveBug.types
++++ new.checkJsxSubtleSkipContextSensitiveBug.types
+@@= skipped -48, +48 lines =@@
+ >load : () => Promise<{ success: true; } | ErrorResult>
+
+     prop2={result => result}
+->prop2 : (result: { success: true; }) => { success: true; }
+->result => result : (result: { success: true; }) => { success: true; }
+->result : { success: true; }
+->result : { success: true; }
++>prop2 : (result: not ErrorResult & { success: true; }) => not ErrorResult & { success: true; }
++>result => result : (result: not ErrorResult & { success: true; }) => not ErrorResult & { success: true; }
++>result : not ErrorResult & { success: true; }
++>result : not ErrorResult & { success: true; }
+
+ />;

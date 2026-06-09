@@ -1,0 +1,55 @@
+--- old.contextuallyTypedJsxAttribute2.errors.txt
++++ new.contextuallyTypedJsxAttribute2.errors.txt
+@@= skipped -0, +0 lines =@@
+-<no content>
++contextuallyTypedJsxAttribute2.tsx(12,16): error TS2322: Type '{ onClick: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & Omit<unknown, "as">'.
++  Property 'onClick' does not exist on type 'IntrinsicAttributes & Omit<unknown, "as">'.
++contextuallyTypedJsxAttribute2.tsx(12,26): error TS7006: Parameter 'e' implicitly has an 'any' type.
++contextuallyTypedJsxAttribute2.tsx(22,17): error TS2322: Type '{ onClick: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: ElementType | undefined; }'.
++  Property 'onClick' does not exist on type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: ElementType | undefined; }'.
++contextuallyTypedJsxAttribute2.tsx(22,27): error TS7006: Parameter 'e' implicitly has an 'any' type.
++contextuallyTypedJsxAttribute2.tsx(23,29): error TS2322: Type '{ as: "button"; onClick: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: "button" | undefined; }'.
++  Property 'onClick' does not exist on type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: "button" | undefined; }'.
++contextuallyTypedJsxAttribute2.tsx(23,39): error TS7006: Parameter 'e' implicitly has an 'any' type.
++
++
++==== contextuallyTypedJsxAttribute2.tsx (6 errors) ====
++    /// <reference path="/.lib/react16.d.ts" />
++    
++    import React from "react";
++    import { ComponentPropsWithRef, ElementType } from "react";
++    
++    function UnwrappedLink<T extends ElementType = ElementType>(
++      props: Omit<ComponentPropsWithRef<ElementType extends T ? "a" : T>, "as">,
++    ) {
++      return <a></a>;
++    }
++    
++    <UnwrappedLink onClick={(e) => {}} />;
++                   ~~~~~~~
++!!! error TS2322: Type '{ onClick: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & Omit<unknown, "as">'.
++!!! error TS2322:   Property 'onClick' does not exist on type 'IntrinsicAttributes & Omit<unknown, "as">'.
++                             ~
++!!! error TS7006: Parameter 'e' implicitly has an 'any' type.
++    
++    function UnwrappedLink2<T extends ElementType = ElementType>(
++      props: Omit<ComponentPropsWithRef<ElementType extends T ? "a" : T>, "as"> & {
++        as?: T;
++      },
++    ) {
++      return <a></a>;
++    }
++    
++    <UnwrappedLink2 onClick={(e) => {}} />;
++                    ~~~~~~~
++!!! error TS2322: Type '{ onClick: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: ElementType | undefined; }'.
++!!! error TS2322:   Property 'onClick' does not exist on type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: ElementType | undefined; }'.
++                              ~
++!!! error TS7006: Parameter 'e' implicitly has an 'any' type.
++    <UnwrappedLink2 as="button" onClick={(e) => {}} />;
++                                ~~~~~~~
++!!! error TS2322: Type '{ as: "button"; onClick: (e: any) => void; }' is not assignable to type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: "button" | undefined; }'.
++!!! error TS2322:   Property 'onClick' does not exist on type 'IntrinsicAttributes & Omit<unknown, "as"> & { as?: "button" | undefined; }'.
++                                          ~
++!!! error TS7006: Parameter 'e' implicitly has an 'any' type.
++    

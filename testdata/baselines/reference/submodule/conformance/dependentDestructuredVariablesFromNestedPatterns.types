@@ -51,26 +51,26 @@ async function myAllSettled<T extends readonly unknown[]>(fn: () => T) {
 
   return promises.map((result) =>
 >promises.map((result) =>    result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))],  ) as { [K in keyof T]: [Awaited<T[K]>, undefined] | [undefined, Error] } : { [K in keyof T]: [undefined, Error] | [Awaited<T[K]>, undefined]; }
->promises.map((result) =>    result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))],  ) : ([unknown, undefined] | [undefined, Error])[]
->promises.map : <U>(callbackfn: (value: PromiseSettledResult<unknown>, index: number, array: PromiseSettledResult<unknown>[]) => U, thisArg?: any) => U[]
+>promises.map((result) =>    result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))],  ) : ([undefined, Error] | [not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null, undefined])[]
+>promises.map : <U>(callbackfn: (value: PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>, index: number, array: PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>[]) => U, thisArg?: any) => U[]
 >promises : { -readonly [P in keyof T]: PromiseSettledResult<Awaited<T[P]>>; }
->map : <U>(callbackfn: (value: PromiseSettledResult<unknown>, index: number, array: PromiseSettledResult<unknown>[]) => U, thisArg?: any) => U[]
->(result) =>    result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))] : (result: PromiseSettledResult<unknown>) => [unknown, undefined] | [undefined, Error]
->result : PromiseSettledResult<unknown>
+>map : <U>(callbackfn: (value: PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>, index: number, array: PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>[]) => U, thisArg?: any) => U[]
+>(result) =>    result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))] : (result: PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>) => [undefined, Error] | [not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null, undefined]
+>result : PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>
 
     result.status === "fulfilled"
->result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))] : [unknown, undefined] | [undefined, Error]
+>result.status === "fulfilled"      ? [result.value, undefined]      : [undefined, new Error(String(result.reason))] : [undefined, Error] | [not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null, undefined]
 >result.status === "fulfilled" : boolean
 >result.status : "fulfilled" | "rejected"
->result : PromiseSettledResult<unknown>
+>result : PromiseSettledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>
 >status : "fulfilled" | "rejected"
 >"fulfilled" : "fulfilled"
 
       ? [result.value, undefined]
->[result.value, undefined] : [unknown, undefined]
->result.value : unknown
->result : PromiseFulfilledResult<unknown>
->value : unknown
+>[result.value, undefined] : [not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null, undefined]
+>result.value : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null
+>result : PromiseFulfilledResult<not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null>
+>value : not (object & { then(onfulfilled: unknown, ...args: unknown[]): any; }) & not undefined & not null
 >undefined : undefined
 
       : [undefined, new Error(String(result.reason))],

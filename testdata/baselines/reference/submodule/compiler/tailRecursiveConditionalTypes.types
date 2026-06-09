@@ -9,10 +9,10 @@ type Trim<S extends string> =
     S;
 
 type T10 = Trim<'                                                                                                                                                hello '>;
->T10 : "hello"
+>T10 : not ` ${T}` & "hello"
 
 type T11 = Trim<' hello                                                                                                                                                '>;
->T11 : "hello"
+>T11 : not ` ${T}` & "hello"
 
 type GetChars<S> = GetCharsRec<S, never>;
 >GetChars : GetChars<S>

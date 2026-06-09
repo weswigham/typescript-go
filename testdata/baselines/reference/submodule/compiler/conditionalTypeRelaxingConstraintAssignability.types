@@ -85,7 +85,7 @@ function g(p1: I, p2: Partial<I>): I {
 >p2 : Partial<I>
 
   return f(p1, p2);
->f(p1, p2) : I
+>f(p1, p2) : Partial<I>
 >f : <T>(t: T, partial: DeepPartial<T>) => T
 >p1 : I
 >p2 : Partial<I>
