@@ -6,6 +6,7 @@ import (
 	"github.com/microsoft/typescript-go/internal/ast"
 	"github.com/microsoft/typescript-go/internal/compiler"
 	"github.com/microsoft/typescript-go/internal/ls/lsconv"
+	"github.com/microsoft/typescript-go/internal/ls/lsutil"
 	"github.com/microsoft/typescript-go/internal/lsp/lsproto"
 )
 
@@ -25,7 +26,7 @@ func getAllDiagnostics(ctx context.Context, program *compiler.Program, file *ast
 func (l *LanguageService) ProvideDiagnostics(ctx context.Context, uri lsproto.DocumentUri) (lsproto.DocumentDiagnosticResponse, error) {
 	program, file := l.getProgramAndFile(uri)
 
-	if l.UserPreferences().EnableValidation.IsFalse() {
+	if (file != nil && l.UserPreferences().EnableValidation.IsFalse(file.ScriptKind)) || l.UserPreferences().EnableValidation == lsutil.PerLanguageTristateFalse {
 		diagnostics := []*lsproto.Diagnostic{}
 		return lsproto.RelatedFullDocumentDiagnosticReportOrUnchangedDocumentDiagnosticReport{
 			FullDocumentDiagnosticReport: &lsproto.RelatedFullDocumentDiagnosticReport{

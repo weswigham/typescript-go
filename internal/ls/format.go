@@ -29,10 +29,10 @@ func (l *LanguageService) ProvideFormatDocument(
 	documentURI lsproto.DocumentUri,
 	options *lsproto.FormattingOptions,
 ) (lsproto.DocumentFormattingResponse, error) {
-	if l.UserPreferences().EnableFormatting.IsFalse() {
+	_, file := l.getProgramAndFile(documentURI)
+	if l.UserPreferences().EnableFormatting.IsFalse(file.ScriptKind) {
 		return lsproto.TextEditsOrNull{}, nil
 	}
-	_, file := l.getProgramAndFile(documentURI)
 	formatOpts := lsutil.FromLSFormatOptions(l.FormatOptions(), options)
 	edits := l.toLSProtoTextEdits(file, l.getFormattingEditsForDocument(
 		ctx,
@@ -48,10 +48,10 @@ func (l *LanguageService) ProvideFormatDocumentRange(
 	options *lsproto.FormattingOptions,
 	r lsproto.Range,
 ) (lsproto.DocumentRangeFormattingResponse, error) {
-	if l.UserPreferences().EnableFormatting.IsFalse() {
+	_, file := l.getProgramAndFile(documentURI)
+	if l.UserPreferences().EnableFormatting.IsFalse(file.ScriptKind) {
 		return lsproto.TextEditsOrNull{}, nil
 	}
-	_, file := l.getProgramAndFile(documentURI)
 	formatOpts := lsutil.FromLSFormatOptions(l.FormatOptions(), options)
 	edits := l.toLSProtoTextEdits(file, l.getFormattingEditsForRange(
 		ctx,
@@ -69,10 +69,10 @@ func (l *LanguageService) ProvideFormatDocumentOnType(
 	position lsproto.Position,
 	character string,
 ) (lsproto.DocumentOnTypeFormattingResponse, error) {
-	if l.UserPreferences().EnableFormatting.IsFalse() {
+	_, file := l.getProgramAndFile(documentURI)
+	if l.UserPreferences().EnableFormatting.IsFalse(file.ScriptKind) {
 		return lsproto.TextEditsOrNull{}, nil
 	}
-	_, file := l.getProgramAndFile(documentURI)
 	formatOpts := lsutil.FromLSFormatOptions(l.FormatOptions(), options)
 	edits := l.toLSProtoTextEdits(file, l.getFormattingEditsAfterKeystroke(
 		ctx,

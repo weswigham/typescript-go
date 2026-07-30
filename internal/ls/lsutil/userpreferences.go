@@ -25,14 +25,40 @@ func NewDefaultUserPreferences() UserPreferences {
 
 		AllowRenameOfImportPath:            core.TSTrue,
 		ProvideRefactorNotApplicableReason: core.TSTrue,
-		EnableFormatting:                   core.TSTrue,
-		EnableValidation:                   core.TSTrue,
+		EnableFormatting:                   PerLanguageTristateTrueBoth,
+		EnableValidation:                   PerLanguageTristateTrueBoth,
 		DisplayPartsForJSDoc:               core.TSTrue,
 		DisableLineTextInReferences:        core.TSTrue,
 		ReportStyleChecksAsWarnings:        core.TSTrue,
 
 		ExcludeLibrarySymbolsInNavTo: core.TSTrue,
 	}
+}
+
+type PerLanguageTristate int
+
+const (
+	PerLanguageTristateUnknown PerLanguageTristate = iota
+	PerLanguageTristateFalse
+	PerLanguageTristateTrueJS
+	PerLanguageTristateTrueTS
+	PerLanguageTristateTrueBoth
+)
+
+func (p PerLanguageTristate) IsTrue(kind core.ScriptKind) bool {
+	inJs := kind == core.ScriptKindJS || kind == core.ScriptKindJSX
+	return (inJs && (p == PerLanguageTristateTrueJS || p == PerLanguageTristateTrueBoth)) ||
+		(!inJs && (p == PerLanguageTristateTrueTS || p == PerLanguageTristateTrueBoth))
+}
+
+func (p PerLanguageTristate) IsFalse(kind core.ScriptKind) bool {
+	inJs := kind == core.ScriptKindJS || kind == core.ScriptKindJSX
+	return inJs && (p == PerLanguageTristateFalse || p == PerLanguageTristateTrueTS) ||
+		(!inJs && (p == PerLanguageTristateFalse || p == PerLanguageTristateTrueJS))
+}
+
+func (p PerLanguageTristate) IsUnknown() bool {
+	return p == PerLanguageTristateUnknown
 }
 
 // UserPreferences represents TypeScript language service preferences.
@@ -171,13 +197,13 @@ type UserPreferences struct {
 
 	// ------- Misc -------
 
-	EnableFormatting            core.Tristate `raw:"formatEnabled" config:"format.enabled" fallbackConfig:"format.enable"`
-	EnableValidation            core.Tristate `raw:"validateEnabled" config:"validate.enabled" fallbackConfig:"validate.enable"`
-	DisableSuggestions          core.Tristate `raw:"disableSuggestions"`          // !!!
-	DisableLineTextInReferences core.Tristate `raw:"disableLineTextInReferences"` // !!!
-	DisplayPartsForJSDoc        core.Tristate `raw:"displayPartsForJSDoc"`        // !!!
-	ReportStyleChecksAsWarnings core.Tristate `raw:"reportStyleChecksAsWarnings" config:"reportStyleChecksAsWarnings"`
-	Locale                      string        `config:"locale"`
+	EnableFormatting            PerLanguageTristate `raw:"formatEnabled" config:"format.enabled" fallbackConfig:"format.enable"`
+	EnableValidation            PerLanguageTristate `raw:"validateEnabled" config:"validate.enabled" fallbackConfig:"validate.enable"`
+	DisableSuggestions          core.Tristate       `raw:"disableSuggestions"`          // !!!
+	DisableLineTextInReferences core.Tristate       `raw:"disableLineTextInReferences"` // !!!
+	DisplayPartsForJSDoc        core.Tristate       `raw:"displayPartsForJSDoc"`        // !!!
+	ReportStyleChecksAsWarnings core.Tristate       `raw:"reportStyleChecksAsWarnings" config:"reportStyleChecksAsWarnings"`
+	Locale                      string              `config:"locale"`
 
 	// ------- ATA -------
 
@@ -288,8 +314,8 @@ const (
 // --- Reflection-based parsing infrastructure ---
 
 // typeParsers maps reflect.Type to a function that parses a value into that type.
-var typeParsers = map[reflect.Type]func(any) any{
-	reflect.TypeFor[core.Tristate](): func(val any) any {
+var typeParsers = map[reflect.Type]func(any, limitConfigScope) any{
+	reflect.TypeFor[core.Tristate](): func(val any, scope limitConfigScope) any {
 		if b, ok := val.(bool); ok {
 			if b {
 				return core.TSTrue
@@ -298,13 +324,28 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return core.TSUnknown
 	},
-	reflect.TypeFor[IndentStyle](): func(val any) any {
+	reflect.TypeFor[PerLanguageTristate](): func(val any, scope limitConfigScope) any {
+		if b, ok := val.(bool); ok {
+			if b {
+				if scope == limitConfigScopeJavascript {
+					return PerLanguageTristateTrueJS
+				}
+				if scope == limitConfigScopeTypescript {
+					return PerLanguageTristateTrueTS
+				}
+				return PerLanguageTristateTrueBoth
+			}
+			return PerLanguageTristateFalse
+		}
+		return PerLanguageTristateUnknown
+	},
+	reflect.TypeFor[IndentStyle](): func(val any, scope limitConfigScope) any {
 		return parseIndentStyle(val)
 	},
-	reflect.TypeFor[SemicolonPreference](): func(val any) any {
+	reflect.TypeFor[SemicolonPreference](): func(val any, scope limitConfigScope) any {
 		return parseSemicolonPreference(val)
 	},
-	reflect.TypeFor[QuotePreference](): func(val any) any {
+	reflect.TypeFor[QuotePreference](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch strings.ToLower(s) {
 			case "auto":
@@ -317,7 +358,7 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return QuotePreferenceUnknown
 	},
-	reflect.TypeFor[JsxAttributeCompletionStyle](): func(val any) any {
+	reflect.TypeFor[JsxAttributeCompletionStyle](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch strings.ToLower(s) {
 			case "braces":
@@ -328,7 +369,7 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return JsxAttributeCompletionStyleAuto
 	},
-	reflect.TypeFor[IncludeInlayParameterNameHints](): func(val any) any {
+	reflect.TypeFor[IncludeInlayParameterNameHints](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch s {
 			case "all":
@@ -339,7 +380,7 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return IncludeInlayParameterNameHintsNone
 	},
-	reflect.TypeFor[OrganizeImportsSort](): func(val any) any {
+	reflect.TypeFor[OrganizeImportsSort](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch strings.ToLower(s) {
 			case "ordinal":
@@ -354,13 +395,13 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return OrganizeImportsSortAuto
 	},
-	reflect.TypeFor[OrganizeImportsCollation](): func(val any) any {
+	reflect.TypeFor[OrganizeImportsCollation](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok && strings.ToLower(s) == "unicode" {
 			return OrganizeImportsCollationUnicode
 		}
 		return OrganizeImportsCollationOrdinal
 	},
-	reflect.TypeFor[OrganizeImportsCaseFirst](): func(val any) any {
+	reflect.TypeFor[OrganizeImportsCaseFirst](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch s {
 			case "lower":
@@ -371,7 +412,7 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return OrganizeImportsCaseFirstFalse
 	},
-	reflect.TypeFor[OrganizeImportsTypeOrder](): func(val any) any {
+	reflect.TypeFor[OrganizeImportsTypeOrder](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch s {
 			case "last":
@@ -384,7 +425,7 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return OrganizeImportsTypeOrderAuto
 	},
-	reflect.TypeFor[modulespecifiers.ImportModuleSpecifierPreference](): func(val any) any {
+	reflect.TypeFor[modulespecifiers.ImportModuleSpecifierPreference](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch strings.ToLower(s) {
 			case "project-relative":
@@ -397,7 +438,7 @@ var typeParsers = map[reflect.Type]func(any) any{
 		}
 		return modulespecifiers.ImportModuleSpecifierPreferenceShortest
 	},
-	reflect.TypeFor[modulespecifiers.ImportModuleSpecifierEndingPreference](): func(val any) any {
+	reflect.TypeFor[modulespecifiers.ImportModuleSpecifierEndingPreference](): func(val any, scope limitConfigScope) any {
 		if s, ok := val.(string); ok {
 			switch strings.ToLower(s) {
 			case "minimal":
@@ -508,6 +549,17 @@ var typeSerializers = map[reflect.Type]func(any) any{
 			return string(v)
 		}
 		return nil
+	},
+	reflect.TypeFor[PerLanguageTristate](): func(val any) any {
+		// TODO: doesn't roundtrip
+		switch val.(PerLanguageTristate) {
+		case PerLanguageTristateTrueJS, PerLanguageTristateTrueTS, PerLanguageTristateTrueBoth:
+			return true
+		case PerLanguageTristateFalse:
+			return false
+		default:
+			return nil
+		}
 	},
 }
 
@@ -657,7 +709,7 @@ func setNestedValue(config map[string]any, path string, value any) {
 	current[parts[len(parts)-1]] = value
 }
 
-func setRawFieldsFromConfig(v reflect.Value, infos []fieldInfo, settings map[string]any) {
+func setRawFieldsFromConfig(v reflect.Value, infos []fieldInfo, settings map[string]any, scope limitConfigScope) {
 	index := unstableNameIndex()
 	for name, value := range settings {
 		if idx, found := index[name]; found {
@@ -668,23 +720,36 @@ func setRawFieldsFromConfig(v reflect.Value, infos []fieldInfo, settings map[str
 					value = !b
 				}
 			}
-			setFieldFromValue(field, value)
+			setFieldFromValue(field, value, scope)
 		}
 	}
 }
 
+type limitConfigScope int
+
+const (
+	limitConfigScopeNone limitConfigScope = iota
+	limitConfigScopeJavascript
+	limitConfigScopeTypescript
+	limitConfigScopeBoth
+)
+
 func (p UserPreferences) withConfig(config map[string]any) UserPreferences {
+	return p.withConfigEx(config, limitConfigScopeNone)
+}
+
+func (p UserPreferences) withConfigEx(config map[string]any, limitScope limitConfigScope) UserPreferences {
 	v := reflect.ValueOf(&p).Elem()
 	infos := fieldInfoCache()
 
 	// Raw UserPreferences can be provided directly, notably via LSP initializationOptions.
-	setRawFieldsFromConfig(v, infos, config)
+	setRawFieldsFromConfig(v, infos, config, limitScope)
 
 	// Process "unstable" section first - allows any field to be set by raw name.
 	// This mirrors VS Code's behavior: { ...config.get('unstable'), ...stableOptions }
 	// where stable options are spread after and take precedence.
 	if unstable, ok := config["unstable"].(map[string]any); ok {
-		setRawFieldsFromConfig(v, infos, unstable)
+		setRawFieldsFromConfig(v, infos, unstable, limitScope)
 	}
 
 	// Process path-based config (VS Code style nested paths).
@@ -718,7 +783,7 @@ func (p UserPreferences) withConfig(config map[string]any) UserPreferences {
 			field.Set(reflect.ValueOf(parser(val)))
 			continue
 		}
-		setFieldFromValue(field, val)
+		setFieldFromValue(field, val, limitScope)
 	}
 
 	// Validate CustomConfigFileName for path traversal
@@ -741,14 +806,14 @@ func getFieldByPath(v reflect.Value, path []int) reflect.Value {
 	return v
 }
 
-func setFieldFromValue(field reflect.Value, val any) {
+func setFieldFromValue(field reflect.Value, val any, scope limitConfigScope) {
 	if val == nil {
 		return
 	}
 
 	// Check custom parsers first (for types like Tristate, enums, etc.)
 	if parser, ok := typeParsers[field.Type()]; ok {
-		field.Set(reflect.ValueOf(parser(val)))
+		field.Set(reflect.ValueOf(parser(val, scope)))
 		return
 	}
 
@@ -904,12 +969,14 @@ func ParseUserPreferences(items map[string]any) UserPreferences {
 		}
 	}
 	// Apply javascript, then typescript, then js/ts (highest precedence).
+	scope := limitConfigScopeJavascript
 	for _, section := range []string{"javascript", "typescript", "js/ts"} {
 		if item, ok := items[section]; ok && item != nil {
 			if settings, ok := item.(map[string]any); ok {
-				prefs = prefs.withConfig(settings)
+				prefs = prefs.withConfigEx(settings, scope)
 			}
 		}
+		scope = scope + 1
 	}
 	return prefs
 }

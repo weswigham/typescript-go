@@ -485,8 +485,8 @@ func TestUserPreferencesParseServerFeaturePreferences(t *testing.T) {
 				},
 			},
 		})
-		assert.Equal(t, prefs.EnableValidation, core.TSFalse)
-		assert.Equal(t, prefs.EnableFormatting, core.TSFalse)
+		assert.Equal(t, prefs.EnableValidation, PerLanguageTristateFalse)
+		assert.Equal(t, prefs.EnableFormatting, PerLanguageTristateFalse)
 		assert.Equal(t, prefs.EnableAutoClosingTags, core.TSFalse)
 	})
 
@@ -499,8 +499,8 @@ func TestUserPreferencesParseServerFeaturePreferences(t *testing.T) {
 				"autoClosingTags": false,
 			},
 		})
-		assert.Equal(t, prefs.EnableValidation, core.TSFalse)
-		assert.Equal(t, prefs.EnableFormatting, core.TSFalse)
+		assert.Equal(t, prefs.EnableValidation, PerLanguageTristateFalse)
+		assert.Equal(t, prefs.EnableFormatting, PerLanguageTristateFalse)
 		assert.Equal(t, prefs.EnableAutoClosingTags, core.TSFalse)
 	})
 
@@ -520,8 +520,8 @@ func TestUserPreferencesParseServerFeaturePreferences(t *testing.T) {
 				},
 			},
 		})
-		assert.Equal(t, prefs.EnableValidation, core.TSTrue)
-		assert.Equal(t, prefs.EnableFormatting, core.TSTrue)
+		assert.Equal(t, prefs.EnableValidation, PerLanguageTristateTrueBoth)
+		assert.Equal(t, prefs.EnableFormatting, PerLanguageTristateTrueBoth)
 		assert.Equal(t, prefs.EnableAutoClosingTags, core.TSTrue)
 	})
 }

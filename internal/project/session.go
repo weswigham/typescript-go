@@ -1655,8 +1655,8 @@ func (s *Session) publishProgramDiagnostics(oldSnapshot *Snapshot, newSnapshot *
 	if !s.options.PushDiagnosticsEnabled {
 		return
 	}
-	if newSnapshot.UserPreferences().EnableValidation.IsFalse() {
-		if oldSnapshot.UserPreferences().EnableValidation.IsFalse() {
+	if newSnapshot.UserPreferences().EnableValidation == lsutil.PerLanguageTristateFalse {
+		if oldSnapshot.UserPreferences().EnableValidation == lsutil.PerLanguageTristateFalse {
 			return
 		}
 		for configFilePath, oldProject := range oldSnapshot.ProjectCollection.ProjectsByPath().Entries() {
@@ -1724,7 +1724,7 @@ func shouldPublishProgramDiagnostics(p *Project, snapshotID uint64) bool {
 }
 
 func (s *Session) publishProjectDiagnostics(ctx context.Context, configFilePath string, diagnostics []*ast.Diagnostic, converters *lsconv.Converters) {
-	if s.Config().EnableValidation.IsFalse() {
+	if s.Config().EnableValidation == lsutil.PerLanguageTristateFalse {
 		diagnostics = nil
 	}
 	ctx = s.withCurrentLocale(ctx)
@@ -1745,7 +1745,7 @@ func (s *Session) publishProjectDiagnostics(ctx context.Context, configFilePath 
 // global diagnostics from checker pools, re-publishing tsconfig diagnostics if changed.
 // Multiple calls are coalesced into a single background task.
 func (s *Session) EnqueuePublishGlobalDiagnostics() {
-	if !s.options.PushDiagnosticsEnabled || s.Config().EnableValidation.IsFalse() {
+	if !s.options.PushDiagnosticsEnabled || s.Config().EnableValidation == lsutil.PerLanguageTristateFalse {
 		return
 	}
 	if s.globalDiagPublishPending.CompareAndSwap(false, true) {
