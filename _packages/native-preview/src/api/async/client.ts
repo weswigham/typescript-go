@@ -131,6 +131,14 @@ export class Client {
 
     private registerFSCallbacks(connection: MessageConnection, fs: FileSystem | undefined): void {
         if (!fs) return;
+        if (fs.cachedFiles) {
+            const requestType = new RequestType<unknown, unknown, void>("setCachedFiles");
+            connection.sendRequest(requestType, fs.cachedFiles);
+        }
+        if (fs.cachedDirectoryListings) {
+            const requestType = new RequestType<unknown, unknown, void>("setCachedDirectoryListings");
+            connection.sendRequest(requestType, fs.cachedDirectoryListings);
+        }
         for (const name of fsCallbackNames) {
             if (name === "writeFile") {
                 if (!fs.writeFile) continue;

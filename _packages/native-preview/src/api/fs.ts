@@ -1,3 +1,4 @@
+import * as fs from "node:fs";
 import { getPathComponents } from "./path.ts";
 
 export interface FileSystemEntries {
@@ -6,6 +7,8 @@ export interface FileSystemEntries {
 }
 
 export interface FileSystem {
+    cachedFiles?: Record<string, string>;
+    cachedDirectoryListings?: Record<string, FileSystemEntries>;
     directoryExists?: (directoryName: string) => boolean | undefined;
     fileExists?: (fileName: string) => boolean | undefined;
     getAccessibleEntries?: (directoryName: string) => FileSystemEntries | undefined;
@@ -149,4 +152,12 @@ export function createVirtualFileSystem(files: Record<string, string>): FileSyst
         }
         return undefined;
     }
+}
+
+// Unlike the virtual filesystem which is wholly in memory, the passthrough filesystem is a wrapper around the actual system filesystem (done in the server), just with some entries pre-cached in memory.
+export function createPassthroughFileSystem(cachedFiles: Record<string, string>, cachedDirectoryListings: Record<string, FileSystemEntries>): FileSystem {
+    return {
+        cachedFiles,
+        cachedDirectoryListings,
+    };
 }
