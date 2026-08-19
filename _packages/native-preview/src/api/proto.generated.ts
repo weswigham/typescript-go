@@ -13,6 +13,7 @@ export interface APIMethodInfo {
     release: APIMethod<ReleaseParams, void>;
     getServerTiming: APIMethod<void, ServerTimingInfo>;
     resetServerTiming: APIMethod<void, void>;
+    batchRequests: APIMethod<BatchRequestsParams, BatchRequestsResponse>;
     initialize: APIMethod<null, InitializeResponse>;
     updateSnapshot: APIMethod<UpdateSnapshotParams, UpdateSnapshotResponse>;
     updateTemporarySnapshot: APIMethod<UpdateTemporarySnapshotParams, UpdateSnapshotResponse>;
@@ -172,6 +173,14 @@ export interface ServerTimingInfo {
      * serverRecentRequestCapacity.
      */
     recentRequests: ServerRequestTiming[] | null;
+}
+
+export interface BatchRequestsParams {
+    requests: readonly BatchRequest[] | null;
+}
+
+export interface BatchRequestsResponse {
+    responses: BatchResponse[];
 }
 
 /** InitializeResponse is returned by the initialize method. */
@@ -894,6 +903,17 @@ export interface ServerRequestTiming {
     processingTimeMs: number;
     /** Timestamp is the Unix time in milliseconds when the request completed. */
     timestamp: number;
+}
+
+export interface BatchRequest {
+    method: "batchRequests" | "emit" | "emitToString" | "formatNodeForInsertion" | "getAliasSymbolOfType" | "getAliasTypeArgumentsOfType" | "getAliasedSymbol" | "getAnyType" | "getApparentPropertiesOfType" | "getApparentType" | "getBaseConstraintOfType" | "getBaseTypeOfLiteralType" | "getBaseTypeOfType" | "getBaseTypes" | "getBigIntType" | "getBindDiagnostics" | "getBooleanType" | "getCheckTypeOfType" | "getCompletionsAtPosition" | "getConfigFileNames" | "getConfigFileParsingDiagnostics" | "getConfigSourceFile" | "getConstantValue" | "getConstraintOfType" | "getConstraintOfTypeParameter" | "getContextualType" | "getDeclarationDiagnostics" | "getDeclarationEmit" | "getDeclaredTypeOfSymbol" | "getDefaultFromTypeParameter" | "getDefaultProjectForFile" | "getDocumentationComment" | "getESSymbolType" | "getExportSpecifierLocalTargetSymbol" | "getExportSymbolOfSymbol" | "getExportsOfModule" | "getExportsOfSymbol" | "getExtendsTypeOfType" | "getFalseTypeOfConditionalType" | "getFreshTypeOfType" | "getFullyQualifiedName" | "getGlobalDiagnostics" | "getImmediateAliasedSymbol" | "getImportAdderEdits" | "getIndexInfosOfType" | "getIndexTypeOfType" | "getJavaScriptEmit" | "getJsDocTags" | "getLocalTypeParametersOfType" | "getMemberInModuleExports" | "getMembersOfSymbol" | "getNeverType" | "getNonNullableType" | "getNonPrimitiveType" | "getNullType" | "getNumberType" | "getObjectTypeOfType" | "getOuterTypeParametersOfType" | "getParameterType" | "getParametersOfSignature" | "getParentOfSymbol" | "getProgramDiagnostics" | "getPropertiesOfType" | "getPropertyOfType" | "getReferencedSymbolsForNode" | "getReferencesToSymbolInFile" | "getRegularTypeOfType" | "getResolvedSignature" | "getRestTypeOfSignature" | "getReturnTypeOfSignature" | "getSemanticDiagnostics" | "getServerTiming" | "getShorthandAssignmentValueSymbol" | "getSignatureFromDeclaration" | "getSignatureUsages" | "getSignaturesOfType" | "getSourceFile" | "getSourceFileMetadata" | "getSourceFileNames" | "getStringType" | "getSuggestionDiagnostics" | "getSymbolAtLocation" | "getSymbolAtPosition" | "getSymbolOfSourceFile" | "getSymbolOfType" | "getSymbolsAtLocations" | "getSymbolsAtPositions" | "getSymbolsInScope" | "getSymbolsOfSourceFiles" | "getSyntacticDiagnostics" | "getTargetOfSignature" | "getTargetOfType" | "getThisParameterOfSignature" | "getTrueTypeOfConditionalType" | "getTypeArguments" | "getTypeAtLocation" | "getTypeAtLocations" | "getTypeAtPosition" | "getTypeFromTypeNode" | "getTypeOfSymbol" | "getTypeOfSymbolAtLocation" | "getTypeParameterAtPosition" | "getTypeParametersOfSignature" | "getTypeParametersOfType" | "getTypePredicateOfSignature" | "getTypesAtPositions" | "getTypesOfSymbols" | "getTypesOfType" | "getUndefinedType" | "getUnknownType" | "getVoidType" | "getWellKnownSignatures" | "getWellKnownSymbols" | "getWidenedType" | "initialize" | "isArrayLikeType" | "isArrayType" | "isContextSensitive" | "isTupleType" | "isTypeAssignableTo" | "parseCommandLine" | "parseConfigFile" | "parseJsonConfigFileContent" | "printNode" | "readConfigFile" | "release" | "resetServerTiming" | "resolveName" | "saveHeapProfile" | "signatureToSignatureDeclaration" | "startCPUProfile" | "stopCPUProfile" | "transpileDeclaration" | "transpileDeclarationFromFile" | "transpileModule" | "transpileModuleFromFile" | "typeToString" | "typeToTypeNode" | "updateSnapshot" | "updateTemporarySnapshot";
+    params?: unknown;
+}
+
+export interface BatchResponse {
+    method: "batchRequests" | "emit" | "emitToString" | "formatNodeForInsertion" | "getAliasSymbolOfType" | "getAliasTypeArgumentsOfType" | "getAliasedSymbol" | "getAnyType" | "getApparentPropertiesOfType" | "getApparentType" | "getBaseConstraintOfType" | "getBaseTypeOfLiteralType" | "getBaseTypeOfType" | "getBaseTypes" | "getBigIntType" | "getBindDiagnostics" | "getBooleanType" | "getCheckTypeOfType" | "getCompletionsAtPosition" | "getConfigFileNames" | "getConfigFileParsingDiagnostics" | "getConfigSourceFile" | "getConstantValue" | "getConstraintOfType" | "getConstraintOfTypeParameter" | "getContextualType" | "getDeclarationDiagnostics" | "getDeclarationEmit" | "getDeclaredTypeOfSymbol" | "getDefaultFromTypeParameter" | "getDefaultProjectForFile" | "getDocumentationComment" | "getESSymbolType" | "getExportSpecifierLocalTargetSymbol" | "getExportSymbolOfSymbol" | "getExportsOfModule" | "getExportsOfSymbol" | "getExtendsTypeOfType" | "getFalseTypeOfConditionalType" | "getFreshTypeOfType" | "getFullyQualifiedName" | "getGlobalDiagnostics" | "getImmediateAliasedSymbol" | "getImportAdderEdits" | "getIndexInfosOfType" | "getIndexTypeOfType" | "getJavaScriptEmit" | "getJsDocTags" | "getLocalTypeParametersOfType" | "getMemberInModuleExports" | "getMembersOfSymbol" | "getNeverType" | "getNonNullableType" | "getNonPrimitiveType" | "getNullType" | "getNumberType" | "getObjectTypeOfType" | "getOuterTypeParametersOfType" | "getParameterType" | "getParametersOfSignature" | "getParentOfSymbol" | "getProgramDiagnostics" | "getPropertiesOfType" | "getPropertyOfType" | "getReferencedSymbolsForNode" | "getReferencesToSymbolInFile" | "getRegularTypeOfType" | "getResolvedSignature" | "getRestTypeOfSignature" | "getReturnTypeOfSignature" | "getSemanticDiagnostics" | "getServerTiming" | "getShorthandAssignmentValueSymbol" | "getSignatureFromDeclaration" | "getSignatureUsages" | "getSignaturesOfType" | "getSourceFile" | "getSourceFileMetadata" | "getSourceFileNames" | "getStringType" | "getSuggestionDiagnostics" | "getSymbolAtLocation" | "getSymbolAtPosition" | "getSymbolOfSourceFile" | "getSymbolOfType" | "getSymbolsAtLocations" | "getSymbolsAtPositions" | "getSymbolsInScope" | "getSymbolsOfSourceFiles" | "getSyntacticDiagnostics" | "getTargetOfSignature" | "getTargetOfType" | "getThisParameterOfSignature" | "getTrueTypeOfConditionalType" | "getTypeArguments" | "getTypeAtLocation" | "getTypeAtLocations" | "getTypeAtPosition" | "getTypeFromTypeNode" | "getTypeOfSymbol" | "getTypeOfSymbolAtLocation" | "getTypeParameterAtPosition" | "getTypeParametersOfSignature" | "getTypeParametersOfType" | "getTypePredicateOfSignature" | "getTypesAtPositions" | "getTypesOfSymbols" | "getTypesOfType" | "getUndefinedType" | "getUnknownType" | "getVoidType" | "getWellKnownSignatures" | "getWellKnownSymbols" | "getWidenedType" | "initialize" | "isArrayLikeType" | "isArrayType" | "isContextSensitive" | "isTupleType" | "isTypeAssignableTo" | "parseCommandLine" | "parseConfigFile" | "parseJsonConfigFileContent" | "printNode" | "readConfigFile" | "release" | "resetServerTiming" | "resolveName" | "saveHeapProfile" | "signatureToSignatureDeclaration" | "startCPUProfile" | "stopCPUProfile" | "transpileDeclaration" | "transpileDeclarationFromFile" | "transpileModule" | "transpileModuleFromFile" | "typeToString" | "typeToTypeNode" | "updateSnapshot" | "updateTemporarySnapshot";
+    result?: unknown;
+    error?: unknown;
 }
 
 /**

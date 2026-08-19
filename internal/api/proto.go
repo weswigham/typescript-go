@@ -72,6 +72,8 @@ const (
 	// the connection itself and is not recorded.
 	MethodResetServerTiming Method = "resetServerTiming"
 
+	MethodBatchRequests Method = "batchRequests"
+
 	MethodInitialize                   Method = "initialize"
 	MethodUpdateSnapshot               Method = "updateSnapshot"
 	MethodUpdateTemporarySnapshot      Method = "updateTemporarySnapshot"
@@ -411,6 +413,7 @@ type UpdateSnapshotResponse struct {
 }
 
 var unmarshalers = map[Method]func([]byte) (any, error){
+	MethodBatchRequests:                unmarshallerFor[BatchRequestsParams],
 	MethodRelease:                      unmarshallerFor[ReleaseParams],
 	MethodInitialize:                   noParams,
 	MethodUpdateSnapshot:               unmarshallerFor[UpdateSnapshotParams],
@@ -617,6 +620,25 @@ type TranspileOutputResponse struct {
 	OutputText    string                `json:"outputText"`
 	Diagnostics   []*DiagnosticResponse `json:"diagnostics,omitempty"`
 	SourceMapText string                `json:"sourceMapText,omitempty"`
+}
+
+type BatchRequestsParams struct {
+	Requests []BatchRequest `json:"requests"`
+}
+
+type BatchRequest struct {
+	Method Method     `json:"method"`
+	Params json.Value `json:"params,omitempty"`
+}
+
+type BatchRequestsResponse struct {
+	Responses []BatchResponse `json:"responses" nonnil:"true"`
+}
+
+type BatchResponse struct {
+	Method Method `json:"method"`
+	Result any    `json:"result,omitempty"`
+	Error  any    `json:"error,omitempty"`
 }
 
 // ReleaseParams are the parameters for the release method.

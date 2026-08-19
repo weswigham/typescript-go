@@ -22,6 +22,9 @@ import {
 } from "../options.ts";
 import type {
     APIMethodInfo,
+    BatchRequestsParams,
+    BatchRequestsResponse,
+    RequestObjects,
     SourceFileResponseMethod,
 } from "../proto.ts";
 import {
@@ -46,6 +49,8 @@ export class Client {
     private options: ClientOptions;
     private connected = false;
     private timing: TimingCollector | undefined;
+    private batchedRequests: {method: RequestObjects["method"], params: RequestObjects["params"], resolve: (value: unknown) => void, reject: (reason?: any) => void}[] = [];
+    private nextBatch: NodeJS.Immediate | "manual" | undefined;
 
     constructor(options: ClientOptions) {
         this.options = options;
@@ -166,17 +171,32 @@ export class Client {
         }
     }
 
-    async apiRequest<K extends keyof APIMethodInfo>(method: K, params: APIMethodInfo[K]["params"]): Promise<APIMethodInfo[K]["result"]> {
+    private async doBatch() {
+        this.nextBatch = undefined;
+        if (!this.batchedRequests.length) return;
+        const requests = this.batchedRequests;
+        this.batchedRequests = [];
         if (!this.connected) {
             await this.connect();
         }
         if (!this.connection) {
             throw new Error("Connection not established");
         }
-
-        const requestType = new RequestType<unknown, APIMethodInfo[K]["result"], void>(method);
+        const requestType = new RequestType<unknown, BatchRequestsResponse, void>("batchRequests");
+        const params: BatchRequestsParams = { requests: requests.map(r => ({ method: r.method, params: r.params })) };
         if (!this.timing) {
-            return this.connection.sendRequest(requestType, params);
+            const response = await this.connection.sendRequest(requestType, params);
+            for (let i = 0; i < requests.length; i++) {
+                const { resolve, reject } = requests[i];
+                const resp = response.responses[i];
+                if (resp.error) {
+                    reject(resp.error);
+                }
+                else {
+                    resolve(resp.result);
+                }
+            }
+            return;
         }
 
         // Round-trip latency is measured here; byte counts approximate the wire
@@ -188,14 +208,54 @@ export class Client {
         const result = await this.connection.sendRequest(requestType, params);
         const roundTripMs = performance.now() - start;
         this.timing.record({
-            method,
+            method: "batchRequests",
             roundTripMs,
             bytesSent,
             bytesReceived: result === undefined || result === null
                 ? 0
                 : Buffer.byteLength(JSON.stringify(result), "utf-8"),
         });
-        return result;
+
+        for (let i = 0; i < requests.length; i++) {
+            const { resolve, reject } = requests[i];
+            const resp = result.responses[i];
+            if (resp.error) {
+                reject(resp.error);
+            }
+            else {
+                resolve(resp.result);
+            }
+        }
+    }
+
+    scheduleImmediateBatch(): void {
+        if (this.nextBatch) return;
+        this.nextBatch = setImmediate(this.doBatch.bind(this));
+    }
+
+    batchContext(): { [Symbol.dispose](): void } {
+        this.nextBatch = "manual";
+        return {
+            [Symbol.dispose]: () => {
+                this.nextBatch = undefined;
+                this.scheduleImmediateBatch();
+            }
+        };
+    }
+
+    async apiRequest<K extends keyof APIMethodInfo>(method: K, params: APIMethodInfo[K]["params"]): Promise<APIMethodInfo[K]["result"]> {
+        if (!this.connected) {
+            await this.connect();
+        }
+        if (!this.connection) {
+            throw new Error("Connection not established");
+        }
+
+        const resultPromise = new Promise<APIMethodInfo[K]["result"]>((resolve, reject) => {
+            this.batchedRequests.push({ method, params, resolve, reject });
+            this.scheduleImmediateBatch();
+        });
+        return resultPromise;
     }
 
     async apiRequestBinary<K extends SourceFileResponseMethod>(method: K, params: APIMethodInfo[K]["params"]): Promise<Uint8Array | undefined> {

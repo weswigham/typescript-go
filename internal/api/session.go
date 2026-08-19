@@ -598,6 +598,8 @@ func (s *Session) HandleRequest(ctx context.Context, method string, params json.
 	}
 
 	switch method {
+	case string(MethodBatchRequests):
+		return s.handleBatchRequests(ctx, parsed.(*BatchRequestsParams))
 	case string(MethodRelease):
 		return s.handleRelease(ctx, parsed.(*ReleaseParams))
 	case string(MethodInitialize):
@@ -875,6 +877,19 @@ func (s *Session) HandleRequest(ctx context.Context, method string, params json.
 	default:
 		return nil, fmt.Errorf("unknown method: %s", method)
 	}
+}
+
+func (s *Session) handleBatchRequests(ctx context.Context, params *BatchRequestsParams) (*BatchRequestsResponse, error) {
+	results := make([]BatchResponse, len(params.Requests))
+	for i, p := range params.Requests {
+		result, err := s.HandleRequest(ctx, string(p.Method), p.Params)
+		results[i] = BatchResponse{
+			Method: p.Method,
+			Result: result,
+			Error:  err,
+		}
+	}
+	return &BatchRequestsResponse{Responses: results}, nil
 }
 
 func (s *Session) handleStartCPUProfile(_ context.Context, params *ProfileParams) (any, error) {

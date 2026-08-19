@@ -491,6 +491,10 @@ func (r *typeRenderer) namedType(named *types.Named) string {
 		return "DocumentIdentifier"
 	case "github.com/microsoft/typescript-go/internal/packagejson.JSONValue":
 		return "unknown"
+	case "github.com/microsoft/typescript-go/internal/json.Value":
+		return "unknown"
+	case "github.com/go-json-experiment/json/jsontext.Value":
+		return "unknown"
 	case "github.com/microsoft/typescript-go/internal/core.Tristate":
 		return "boolean"
 	case "github.com/microsoft/typescript-go/internal/core.JsxEmit":

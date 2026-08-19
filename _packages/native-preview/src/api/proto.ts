@@ -25,6 +25,9 @@ export type TypePropertyMethod = Exclude<APIMethodsReturning<TypeResponse>, Intr
 export type TypesPropertyMethod = APIMethodsReturning<TypeResponse[]>;
 export type IntrinsicTypeMethod = "getAnyType" | "getBigIntType" | "getBooleanType" | "getESSymbolType" | "getNeverType" | "getNonPrimitiveType" | "getNullType" | "getNumberType" | "getStringType" | "getUndefinedType" | "getUnknownType" | "getVoidType";
 
+export type RequestObjects = {[K in keyof APIMethodInfo]: {method: K, params: APIMethodInfo[K]["params"]}}[keyof APIMethodInfo]
+export type ResponseObjects = {[K in keyof APIMethodInfo]: {method: K, result: APIMethodInfo[K]["result"], error?: string}}[keyof APIMethodInfo]
+
 /**
  * A position within a document, combining a document identifier with an offset.
  */
